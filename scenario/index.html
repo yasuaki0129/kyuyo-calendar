@@ -1,0 +1,2399 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="シナリオ共作">
+<meta name="theme-color" content="#eceae4">
+<meta name="description" content="脚本を、いっしょに書く。シナリオ共作の試作。">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 64 64%27%3E%3Crect fill=%27%23f7f6f2%27 width=%2764%27 height=%2764%27/%3E%3Ctext x=%2732%27 y=%2744%27 text-anchor=%27middle%27 font-size=%2736%27 font-family=%27serif%27 fill=%27%231c1c1c%27%3E台%3C/text%3E%3C/svg%3E">
+<title>シナリオ共作</title>
+<style>
+:root {
+  --bg: #eceae4;
+  --paper: #fffcf8;
+  --ink: #1c1c1c;
+  --muted: #8a8680;
+  --faint: #b4afa8;
+  --line: #e2ddd4;
+  --line-strong: #c4bfb6;
+  --header-bg: #f7f6f2;
+  --ok: #3d6b4f;
+  --danger: #9a3b2f;
+  --ui: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Hiragino Kaku Gothic Pro", "Noto Sans CJK JP", "Noto Sans JP", "Yu Gothic UI", "Yu Gothic", "Meiryo", sans-serif;
+  --mincho: "Yu Mincho", YuMincho, "Hiragino Mincho ProN", "Hiragino Mincho Pro", "Hiragino Mincho", "Noto Serif CJK JP", "Noto Serif JP", "Source Han Serif JP", "IPAexMincho", "IPAPMincho", "MS PMincho", "MS Mincho", serif;
+  --safe-t: env(safe-area-inset-top, 0px);
+  --safe-b: env(safe-area-inset-bottom, 0px);
+  --safe-l: env(safe-area-inset-left, 0px);
+  --safe-r: env(safe-area-inset-right, 0px);
+  --header-h: 52px;
+  --tool-h: 42px;
+  --sidebar-w: 232px;
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { margin: 0; padding: 0; background: var(--bg); color: var(--ink); }
+html { height: 100%; }
+body {
+  font-family: var(--ui);
+  font-weight: 400;
+  font-size: 14px;
+  line-height: 1.5;
+  min-height: 100%;
+  min-height: 100dvh;
+  overflow: hidden;
+}
+button, input, textarea, select { font: inherit; color: inherit; }
+@media (max-width: 860px) { input, textarea, select { font-size: 16px !important; } }
+button { background: none; border: 0; padding: 0; cursor: pointer; }
+textarea { resize: none; overflow: hidden; }
+input, textarea { background: transparent; border: 0; outline: none; }
+button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 1px solid var(--ink); outline-offset: 2px; }
+
+.app { display: flex; flex-direction: column; height: 100dvh; height: 100vh; padding-top: var(--safe-t); }
+.top {
+  flex: 0 0 auto;
+  background: var(--header-bg);
+  border-bottom: 1px solid var(--line);
+  padding-left: max(12px, var(--safe-l));
+  padding-right: max(12px, var(--safe-r));
+}
+.header {
+  height: var(--header-h);
+  display: flex; align-items: center; gap: 10px;
+}
+.brand {
+  flex: 0 0 auto;
+  font-size: 11px; letter-spacing: 0.18em; font-weight: 400; color: var(--muted);
+  white-space: nowrap; padding-right: 8px; border-right: 1px solid var(--line);
+  line-height: 1.2;
+}
+.brand small { display: block; letter-spacing: 0.06em; font-size: 9px; color: var(--faint); margin-top: 1px; }
+#project-title {
+  flex: 1 1 auto; min-width: 0; max-width: 360px;
+  font-size: 16px; font-weight: 400; letter-spacing: 0.04em;
+  padding: 6px 8px; border-bottom: 1px solid transparent;
+}
+#project-title:hover, #project-title:focus { border-bottom-color: var(--line-strong); outline: none; }
+.header-right { margin-left: auto; display: flex; align-items: center; gap: 8px; flex: 0 0 auto; }
+#presence-bar { display: flex; align-items: center; gap: 8px; min-height: 32px; }
+#presence-avatars { display: flex; align-items: center; }
+.avatar {
+  width: 28px; height: 28px; border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center;
+  color: #fff; font-size: 11px; letter-spacing: 0;
+  border: 2px solid var(--header-bg); margin-left: -6px;
+  box-shadow: 0 0 0 1px rgba(0,0,0,.06);
+  position: relative;
+}
+#presence-avatars .avatar:first-child { margin-left: 0; }
+.avatar.me { box-shadow: 0 0 0 1px var(--ink); }
+.avatar[data-typing="1"]::after {
+  content: ""; position: absolute; right: -1px; bottom: -1px;
+  width: 8px; height: 8px; border-radius: 50%; background: var(--ok);
+  border: 2px solid var(--header-bg);
+}
+#typing-indicator {
+  font-size: 11px; color: var(--muted); letter-spacing: 0.04em;
+  max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+#save-status {
+  font-size: 11px; color: var(--ok); letter-spacing: 0.06em; white-space: nowrap;
+  min-width: 4.5em;
+}
+#save-status.saving { color: var(--muted); }
+#save-status.err { color: var(--danger); }
+.writer-pick {
+  display: flex; align-items: center; gap: 6px;
+  border: 1px solid var(--line-strong); padding: 3px 8px 3px 4px; min-height: 32px;
+  background: #fff;
+}
+.writer-pick .avatar { width: 22px; height: 22px; margin: 0; border-width: 0; font-size: 10px; }
+.writer-pick select {
+  border: 0; background: transparent; font-size: 12px; padding: 0; max-width: 7em;
+  outline: none;
+}
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  min-height: 32px; padding: 0 12px;
+  border: 1px solid var(--ink); background: #fff; font-size: 12px; letter-spacing: 0.08em; white-space: nowrap;
+}
+.btn:active { background: var(--ink); color: #fff; }
+.btn.primary { background: var(--ink); color: #fff; }
+.btn.primary:active { background: #444; }
+.btn.ghost { border-color: var(--line-strong); color: var(--ink); background: transparent; }
+.btn.danger { border-color: var(--danger); color: var(--danger); }
+.icon-btn {
+  width: 36px; height: 36px; display: inline-flex; align-items: center; justify-content: center;
+  color: var(--ink); border: 1px solid transparent; font-size: 16px;
+}
+.icon-btn:hover { border-color: var(--line-strong); }
+.toolbar {
+  height: var(--tool-h);
+  display: flex; align-items: center; gap: 4px;
+  padding: 0 0 8px;
+  overflow-x: auto; -webkit-overflow-scrolling: touch;
+}
+.seg { display: flex; border: 1px solid var(--ink); }
+.seg button {
+  min-height: 30px; padding: 0 11px; font-size: 12px; letter-spacing: 0.08em;
+  border-right: 1px solid var(--ink); background: #fff;
+}
+.seg button:last-child { border-right: 0; }
+.seg button.on { background: var(--ink); color: #fff; }
+.tool-hint { font-size: 10px; color: var(--faint); letter-spacing: 0.06em; margin-left: 6px; white-space: nowrap; }
+.toolbar .sp { flex: 1; min-width: 8px; }
+.toolbar .ghost-link {
+  font-size: 11px; letter-spacing: 0.08em; color: var(--muted); padding: 0 8px; min-height: 30px;
+  white-space: nowrap; border-bottom: 1px solid transparent;
+}
+.toolbar .ghost-link:hover { color: var(--ink); border-bottom-color: var(--ink); }
+
+.body { flex: 1 1 auto; display: flex; min-height: 0; position: relative; }
+.sidebar {
+  flex: 0 0 var(--sidebar-w);
+  width: var(--sidebar-w);
+  background: var(--header-bg);
+  border-right: 1px solid var(--line);
+  display: flex; flex-direction: column; min-height: 0;
+  padding-bottom: var(--safe-b);
+}
+.side-h {
+  padding: 14px 14px 8px;
+  font-size: 10px; letter-spacing: 0.16em; color: var(--muted);
+  display: flex; align-items: center; justify-content: space-between;
+}
+#scene-list { flex: 1 1 auto; overflow: auto; padding: 0 8px 8px; -webkit-overflow-scrolling: touch; }
+.scene-item {
+  display: flex; align-items: flex-start; gap: 6px;
+  padding: 8px 6px; border: 1px solid transparent; margin-bottom: 2px;
+  cursor: pointer; width: 100%; text-align: left; background: transparent;
+}
+.scene-item:hover, .scene-item.on { background: #fff; border-color: var(--line); }
+.scene-item .grip { color: var(--faint); cursor: grab; font-size: 12px; padding-top: 2px; }
+.scene-item .num { font-family: var(--mincho); font-size: 12px; flex: 0 0 auto; }
+.scene-item .ttl {
+  font-family: var(--mincho); font-size: 12px; line-height: 1.4;
+  color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; flex: 1;
+}
+.scene-move { display: flex; flex-direction: column; gap: 0; }
+.scene-move button { width: 22px; height: 16px; color: var(--faint); font-size: 9px; }
+.side-stats {
+  border-top: 1px solid var(--line); padding: 12px 14px 10px;
+  font-size: 11px; color: var(--muted); letter-spacing: 0.04em; line-height: 1.7;
+}
+.side-stats strong { color: var(--ink); font-weight: 400; }
+.side-legend { padding: 0 14px 14px; display: flex; flex-wrap: wrap; gap: 8px; }
+.lg { display: flex; align-items: center; gap: 4px; font-size: 10px; color: var(--muted); }
+.lg i { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+
+.main {
+  flex: 1 1 auto; min-width: 0; overflow: auto; -webkit-overflow-scrolling: touch;
+  padding: 20px 16px 80px;
+  padding-left: max(16px, var(--safe-l));
+  padding-right: max(16px, var(--safe-r));
+}
+.paper {
+  background: var(--paper);
+  max-width: 760px; margin: 0 auto;
+  padding: 40px 52px 80px;
+  box-shadow: 0 1px 2px rgba(0,0,0,.03), 0 8px 28px rgba(0,0,0,.05);
+  min-height: 70vh; position: relative;
+}
+.logline {
+  font-family: var(--mincho); font-size: 13px; color: var(--muted);
+  letter-spacing: 0.06em; line-height: 1.8; margin: 0 0 28px;
+  padding-bottom: 16px; border-bottom: 1px solid var(--line);
+}
+#blocks { position: relative; }
+.block {
+  position: relative; padding: 6px 8px 6px 16px; margin: 0 0 2px;
+  border: 1px solid transparent;
+}
+.block .bar {
+  position: absolute; left: 0; top: 8px; bottom: 8px; width: 3px;
+  background: var(--author, var(--line-strong)); opacity: 0.85;
+}
+.block:hover, .block.active { background: rgba(0,0,0,.015); }
+.block.active { border-color: var(--line); }
+.block.remote-edit {
+  border-color: var(--presence, var(--line-strong));
+  background: color-mix(in srgb, var(--presence, transparent) 7%, var(--paper));
+}
+.block-meta {
+  display: flex; align-items: center; gap: 8px; min-height: 20px;
+  margin-bottom: 2px; opacity: 0; transition: opacity .15s;
+}
+.block:hover .block-meta, .block.active .block-meta, .block.remote-edit .block-meta { opacity: 1; }
+.kind {
+  font-size: 10px; letter-spacing: 0.12em; color: var(--muted);
+  border: 1px solid var(--line-strong); padding: 0 6px; min-height: 18px;
+  display: inline-flex; align-items: center; background: #fff;
+}
+.meta-actions { margin-left: auto; display: flex; gap: 2px; }
+.meta-actions button, .cmt-badge {
+  font-size: 10px; letter-spacing: 0.06em; color: var(--muted); padding: 2px 6px; min-height: 22px;
+}
+.meta-actions button:hover, .cmt-badge:hover { color: var(--ink); }
+.cmt-badge.has { color: var(--ink); }
+.remote-tag {
+  font-size: 10px; letter-spacing: 0.06em; padding: 0 6px; min-height: 18px;
+  display: inline-flex; align-items: center; color: #fff; background: var(--presence);
+}
+.hashira-row { display: flex; align-items: flex-start; gap: 2px; }
+.hashira-num {
+  font-family: var(--mincho); font-size: 18px; font-weight: 700; line-height: 1.8;
+  flex: 0 0 auto; letter-spacing: 0; padding-top: 0; white-space: nowrap;
+}
+.blk-text {
+  font-family: var(--mincho); font-size: 16px; line-height: 1.85; letter-spacing: 0.04em;
+  width: 100%; padding: 0; background: transparent; border: 0;
+  color: var(--ink);
+}
+.hashira-row .blk-text { font-weight: 700; font-size: 18px; }
+.togaki .blk-text { padding-left: 2em; }
+.serifu-row { display: flex; align-items: flex-start; gap: 0; flex-wrap: nowrap; }
+.char-wrap { position: relative; flex: 0 0 auto; }
+.char-name {
+  font-family: var(--mincho); font-size: 16px; line-height: 1.85; letter-spacing: 0.04em;
+  width: 5.5em; max-width: 30vw; padding: 0 2px; border-bottom: 1px dotted var(--line);
+  font-weight: 700;
+}
+.dialogue { display: flex; align-items: flex-start; flex: 1 1 auto; min-width: 0; }
+.bq { font-family: var(--mincho); font-size: 16px; line-height: 1.85; padding: 0 1px; flex: 0 0 auto; }
+.serifu-row .blk-text { flex: 1 1 auto; min-width: 0; }
+.ac {
+  position: absolute; left: 0; top: 100%; z-index: 20; background: #fff;
+  border: 1px solid var(--line-strong); min-width: 100%; max-height: 180px; overflow: auto;
+  box-shadow: 0 8px 20px rgba(0,0,0,.06);
+}
+.ac button {
+  display: flex; align-items: center; gap: 8px; width: 100%; text-align: left;
+  padding: 8px 10px; font-size: 13px; min-height: 36px;
+}
+.ac button:hover, .ac button.on { background: var(--bg); }
+.ac i { width: 8px; height: 8px; border-radius: 50%; }
+.caret {
+  position: absolute; width: 2px; background: var(--presence, #8b6e6e);
+  pointer-events: none; z-index: 5; animation: blink 1s step-end infinite;
+}
+.caret-label {
+  position: absolute; top: -14px; left: 0; white-space: nowrap;
+  font-size: 9px; letter-spacing: 0.04em; color: #fff; background: var(--presence);
+  padding: 0 4px; line-height: 14px; pointer-events: none; font-family: var(--ui);
+}
+@keyframes blink { 50% { opacity: 0; } }
+
+.panel {
+  flex: 0 0 280px; width: 280px;
+  background: var(--header-bg); border-left: 1px solid var(--line);
+  display: flex; flex-direction: column; min-height: 0;
+  padding-bottom: var(--safe-b);
+}
+.panel.hidden { display: none; }
+.panel-h {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 14px 8px; font-size: 11px; letter-spacing: 0.14em;
+}
+#panel-body { flex: 1; overflow: auto; padding: 8px 14px 14px; -webkit-overflow-scrolling: touch; }
+.cmt { padding: 8px 0; border-bottom: 1px solid var(--line); }
+.cmt .who { font-size: 11px; letter-spacing: 0.04em; }
+.cmt .when { font-size: 10px; color: var(--faint); margin-left: 6px; }
+.cmt .tx { font-size: 13px; line-height: 1.6; margin-top: 4px; white-space: pre-wrap; }
+.hist { padding: 8px 0; border-bottom: 1px solid var(--line); }
+.hist .tx { font-family: var(--mincho); font-size: 12px; color: var(--muted); margin: 4px 0 8px; white-space: pre-wrap; max-height: 6em; overflow: hidden; }
+#cmt-input, .field, .area {
+  width: 100%; border: 1px solid var(--line-strong); background: #fff; padding: 8px 10px;
+  font-size: 14px; min-height: 40px;
+}
+.area { min-height: 80px; line-height: 1.6; overflow: auto; }
+.field-label { font-size: 10px; letter-spacing: 0.14em; color: var(--muted); display: block; margin: 14px 0 6px; }
+
+/* Start */
+.start {
+  position: fixed; inset: 0; background: var(--bg); z-index: 40;
+  display: flex; align-items: center; justify-content: center; padding: 32px 20px;
+  padding-bottom: max(32px, var(--safe-b));
+}
+.start-inner { max-width: 400px; text-align: center; }
+.start h1 { font-weight: 400; font-size: 22px; letter-spacing: 0.22em; margin: 0 0 8px; }
+.start p { color: var(--muted); letter-spacing: 0.08em; font-size: 13px; margin: 0 0 32px; }
+.start .btn { min-width: 240px; min-height: 44px; margin: 0 auto 10px; display: flex; }
+
+/* Modal */
+.modal-bg {
+  position: fixed; inset: 0; background: rgba(28,28,28,.28); z-index: 50;
+  display: flex; align-items: flex-start; justify-content: center;
+  padding: 8vh 16px 16px; overflow: auto;
+}
+.modal {
+  background: var(--paper); width: 100%; max-width: 520px;
+  padding: 28px 28px 24px; box-shadow: 0 12px 40px rgba(0,0,0,.12);
+}
+.modal h2 { font-weight: 400; font-size: 16px; letter-spacing: 0.14em; margin: 0 0 8px; }
+.modal .lead { font-size: 12px; color: var(--muted); line-height: 1.7; letter-spacing: 0.04em; margin: 0 0 16px; }
+.modal-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 20px; justify-content: flex-end; }
+.char-row, .writer-row {
+  display: flex; gap: 8px; align-items: center; margin-bottom: 8px;
+}
+.swatch { width: 28px; height: 28px; border-radius: 50%; border: 1px solid rgba(0,0,0,.1); padding: 0; flex: 0 0 auto; }
+.char-row input, .writer-row input { flex: 1; border: 1px solid var(--line-strong); background: #fff; padding: 6px 8px; min-height: 36px; }
+.notice {
+  background: #f3f0ea; border: 1px solid var(--line); padding: 12px 14px;
+  font-size: 12px; line-height: 1.7; color: var(--ink); letter-spacing: 0.03em; margin: 12px 0;
+}
+.notice strong { font-weight: 400; border-bottom: 1px solid var(--ink); }
+.share-link {
+  display: flex; gap: 8px; align-items: center;
+}
+.share-link input { flex: 1; border: 1px solid var(--line-strong); background: #fff; padding: 8px 10px; min-height: 40px; font-size: 12px; }
+.proj-item {
+  display: flex; align-items: center; gap: 8px; padding: 10px 0; border-bottom: 1px solid var(--line);
+  width: 100%; text-align: left;
+}
+.proj-item .nm { flex: 1; font-size: 14px; }
+.proj-item .sub { font-size: 11px; color: var(--muted); }
+
+/* Print / vertical manuscript */
+#print-view {
+  display: none; position: fixed; inset: 0; z-index: 60; background: #d9d3c8;
+  overflow: auto; padding: 24px 16px 80px;
+}
+#print-view.open { display: block; }
+.print-bar {
+  position: sticky; top: 0; z-index: 2; display: flex; gap: 8px; align-items: center;
+  background: #d9d3c8; padding: 8px 0 16px; font-family: var(--ui);
+}
+.manuscript-wrap { display: flex; flex-wrap: wrap; gap: 24px; justify-content: center; }
+.genko .hshi, .genko .tg, .genko .sr { margin-left: 0.7em; }
+.genko .doc-title { margin-left: 1em; }
+.genko .doc-line { margin-left: 0.8em; }
+.genko {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  font-family: var(--mincho);
+  background: #fffcf8;
+  color: #1a1a1a;
+  width: 148mm;
+  height: 210mm;
+  max-width: 100%;
+  padding: 12mm 10mm;
+  box-shadow: 0 8px 30px rgba(0,0,0,.12);
+  font-size: 14px;
+  line-height: 1.85;
+  letter-spacing: 0.05em;
+  overflow: hidden;
+  background-image:
+    linear-gradient(to right, rgba(160,80,70,.12) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(160,80,70,.12) 1px, transparent 1px);
+  background-size: 1.95em 1.95em;
+  background-origin: content-box;
+  background-clip: content-box;
+}
+.genko .doc-title { font-size: 20px; font-weight: 700; letter-spacing: 0.2em; margin-left: 1.6em; }
+.genko .doc-line { color: #666; margin-left: 1.4em; letter-spacing: 0.12em; }
+.genko .hshi { font-weight: 700; margin-left: 1.2em; }
+.genko .tg { text-indent: 1em; }
+.genko .sr { }
+
+.menu {
+  position: absolute; right: 12px; top: calc(var(--header-h) + var(--safe-t) + 4px);
+  background: #fff; border: 1px solid var(--line-strong); z-index: 30;
+  min-width: 220px; box-shadow: 0 8px 24px rgba(0,0,0,.08); padding: 6px 0;
+}
+.menu button {
+  display: block; width: 100%; text-align: left; padding: 10px 16px; font-size: 13px; letter-spacing: 0.06em; min-height: 40px;
+}
+.menu button:hover { background: var(--bg); }
+.menu hr { border: 0; border-top: 1px solid var(--line); margin: 6px 0; }
+.hidden { display: none !important; }
+.scr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); }
+
+@media (max-width: 860px) {
+  .sidebar, .panel {
+    position: absolute; top: 0; bottom: 0; z-index: 15;
+    box-shadow: 8px 0 24px rgba(0,0,0,.08);
+  }
+  .sidebar { left: 0; transform: translateX(-105%); transition: transform .2s; }
+  .sidebar.open { transform: none; }
+  .panel { right: 0; width: min(320px, 92vw); flex-basis: auto; box-shadow: -8px 0 24px rgba(0,0,0,.08); }
+  .paper { padding: 24px 18px 60px; box-shadow: none; }
+  .main { padding: 8px 0 60px; }
+  .brand small { display: none; }
+  .tool-hint, .toolbar .ghost-link.wide { display: none; }
+  #project-title { max-width: 40vw; font-size: 14px; }
+  #typing-indicator { max-width: 72px; }
+  .char-name { width: 6em; }
+  .scrim {
+    position: absolute; inset: 0; background: rgba(28,28,28,.2); z-index: 14;
+  }
+}
+@media (max-width: 720px) {
+  .header {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    grid-template-rows: auto auto;
+    height: auto;
+    gap: 2px 8px;
+    padding: 8px 0 4px;
+    align-items: center;
+  }
+  .brand { grid-column: 1; grid-row: 1; border-right: 0; }
+  .header-right { grid-column: 2; grid-row: 1; margin-left: 0; justify-self: end; }
+  #project-title { grid-column: 1 / -1; grid-row: 2; max-width: none; width: 100%; padding-left: 2px; }
+}
+@media (max-width: 520px) {
+  .writer-pick span, .header .btn.primary span { display: none; }
+  .brand { letter-spacing: 0.08em; padding-right: 6px; font-size: 10px; }
+}
+
+@media print {
+  @page { size: A4; margin: 12mm; }
+  html, body { background: #fff !important; overflow: visible !important; height: auto !important; }
+  .app, .start, .modal-bg, .menu, .print-bar, .scrim { display: none !important; }
+  #print-view { display: block !important; position: static; background: #fff; overflow: visible; padding: 0; }
+  .manuscript-wrap { display: block; }
+  .genko {
+    box-shadow: none; width: auto; height: auto;
+    min-height: 260mm; max-width: none; overflow: hidden;
+    page-break-after: always; margin: 0 auto; padding: 14mm 12mm;
+    font-size: 15px;
+  }
+}
+</style>
+</head>
+<body>
+<div class="app" id="app" hidden>
+  <div class="top">
+    <div class="header">
+      <div class="brand">シナリオ共作<small>試作</small></div>
+      <input id="project-title" type="text" maxlength="80" aria-label="作品名" placeholder="無題">
+      <div class="header-right">
+        <div id="presence-bar">
+          <div id="presence-avatars" aria-label="いま開いている書き手"></div>
+          <div id="typing-indicator"></div>
+        </div>
+        <div id="save-status" class="saving">保存中…</div>
+        <label class="writer-pick" title="いまの書き手">
+          <span class="avatar" id="me-avatar">自</span>
+          <span class="scr-only">書き手</span>
+          <select id="writer-select" aria-label="書き手を選ぶ"></select>
+        </label>
+        <button type="button" class="btn primary" id="btn-share">共有</button>
+        <button type="button" class="icon-btn" id="btn-menu" aria-label="メニュー">☰</button>
+      </div>
+    </div>
+    <div class="toolbar" id="toolbar">
+      <button type="button" class="icon-btn" id="btn-scenes" aria-label="柱一覧" title="柱一覧">≡</button>
+      <div class="seg" role="tablist" aria-label="ブロックの種類">
+        <button type="button" data-set-type="hashira" id="btn-type-hashira">柱</button>
+        <button type="button" data-set-type="togaki" id="btn-type-togaki">ト書き</button>
+        <button type="button" data-set-type="serifu" id="btn-type-serifu">セリフ</button>
+      </div>
+      <span class="tool-hint">Tab で種類を切替　Ctrl+1 柱　Ctrl+2 ト書き　Ctrl+3 セリフ</span>
+      <div class="sp"></div>
+      <button type="button" class="ghost-link" id="btn-chars">登場人物</button>
+      <button type="button" class="ghost-link" id="btn-print">縦書き印刷</button>
+      <button type="button" class="ghost-link wide" id="btn-export-txt">テキスト</button>
+    </div>
+  </div>
+  <div class="body" id="body">
+    <aside class="sidebar" id="sidebar">
+      <div class="side-h">柱一覧</div>
+      <div id="scene-list"></div>
+      <div class="side-stats" id="side-stats"></div>
+      <div class="side-legend" id="side-legend"></div>
+    </aside>
+    <div class="main" id="main">
+      <div class="paper" id="paper">
+        <div class="logline" id="logline-view"></div>
+        <div id="blocks"></div>
+      </div>
+    </div>
+    <aside class="panel hidden" id="panel">
+      <div class="panel-h"><span id="panel-title">コメント</span><button type="button" class="icon-btn" id="btn-panel-close" aria-label="閉じる">×</button></div>
+      <div id="panel-body"></div>
+    </aside>
+    <div class="scrim hidden" id="scrim"></div>
+  </div>
+</div>
+
+<div class="start" id="start">
+  <div class="start-inner">
+    <h1>シナリオ共作</h1>
+    <p>脚本を、いっしょに書く。</p>
+    <button type="button" class="btn primary" id="btn-new">新しい作品をつくる</button>
+    <button type="button" class="btn" id="btn-import-start">共有ファイルを読み込む</button>
+    <button type="button" class="btn ghost" id="btn-demo">デモを見る</button>
+  </div>
+</div>
+
+<div class="menu hidden" id="menu" role="menu">
+  <button type="button" data-act="projects">作品の管理</button>
+  <button type="button" data-act="chars">登場人物</button>
+  <button type="button" data-act="writers">書き手の管理</button>
+  <button type="button" data-act="print">縦書き印刷プレビュー</button>
+  <button type="button" data-act="txt">テキストを書き出す</button>
+  <button type="button" data-act="json">JSONを書き出す</button>
+  <button type="button" data-act="import">共有ファイルを取り込む</button>
+  <hr>
+  <button type="button" data-act="help">ショートカット</button>
+</div>
+
+<div class="modal-bg hidden" id="modal-bg"></div>
+
+<div id="print-view">
+  <div class="print-bar">
+    <button type="button" class="btn primary" id="btn-do-print">印刷する</button>
+    <button type="button" class="btn ghost" id="btn-close-print">閉じる</button>
+    <span class="tool-hint">縦書き・原稿用紙風のレイアウトです。印刷ダイアログからPDFにもできます。</span>
+  </div>
+  <div class="manuscript-wrap" id="manuscript"></div>
+</div>
+
+<input type="file" id="file-input" accept="application/json,.json" class="hidden" aria-hidden="true">
+
+<script>
+(function () {
+  "use strict";
+
+  var STORAGE_KEY = "scenario-kyosaku-v1";
+  var CHANNEL_NAME = "scenario-kyosaku-sync";
+  var FW = "０１２３４５６７８９";
+  var PALETTE = ["#6e7a8b", "#8b6e6e", "#6e8b86", "#8b7a6e", "#7a6e8b", "#6e8b6e", "#8b866e", "#7a8b6e"];
+  var TYPE_LABEL = { hashira: "柱", togaki: "ト書き", serifu: "セリフ" };
+
+  function uid() {
+    return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+  }
+  function now() { return Date.now(); }
+  function fwNum(n) {
+    return String(n).replace(/\d/g, function (d) { return FW[Number(d)]; });
+  }
+  function escapeHtml(s) {
+    return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+      return ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c];
+    });
+  }
+  function initials(name) {
+    var s = String(name || "？").trim();
+    return s.slice(0, 1);
+  }
+  function fmtTime(ts) {
+    var d = new Date(ts);
+    try {
+      return new Intl.DateTimeFormat("ja-JP", {
+        timeZone: "Asia/Tokyo",
+        month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit"
+      }).format(d);
+    } catch (e) {
+      return d.getMonth() + 1 + "/" + d.getDate() + " " + d.getHours() + ":" + String(d.getMinutes()).padStart(2, "0");
+    }
+  }
+  function countChars(project) {
+    if (!project) return 0;
+    var n = 0;
+    var hi = 0;
+    (project.blocks || []).forEach(function (b) {
+      if (b.type === "hashira") {
+        hi += 1;
+        n += ("○" + fwNum(hi) + "　" + (b.text || "")).length;
+      } else if (b.type === "serifu") {
+        n += ((b.characterName || "") + "「" + (b.text || "") + "」").length;
+      } else {
+        n += (b.text || "").length;
+      }
+    });
+    return n;
+  }
+  function pagesOf(project) {
+    return countChars(project) / 400;
+  }
+  function debounce(fn, ms) {
+    var t;
+    return function () {
+      var a = arguments, self = this;
+      clearTimeout(t);
+      t = setTimeout(function () { fn.apply(self, a); }, ms);
+    };
+  }
+  function deepClone(o) { return JSON.parse(JSON.stringify(o)); }
+
+  function newWriter(name, color) {
+    return { id: uid(), name: name || "自分", color: color || PALETTE[0] };
+  }
+  function newChar(name, color) {
+    return { id: uid(), name: name || "", color: color || PALETTE[2], note: "" };
+  }
+  function newBlock(type, writerId) {
+    return {
+      id: uid(),
+      type: type || "togaki",
+      text: "",
+      characterName: "",
+      authorId: writerId || "",
+      updatedAt: now(),
+      comments: [],
+      history: []
+    };
+  }
+  function newProject(title, writerId) {
+    return {
+      id: uid(),
+      title: title || "無題",
+      logline: "",
+      characters: [],
+      blocks: [newBlock("hashira", writerId)],
+      createdAt: now(),
+      updatedAt: now()
+    };
+  }
+  function emptyState() {
+    return { version: 1, writers: [], projects: [] };
+  }
+
+  /* ============================================================
+     SyncAdapter
+     状態の保存と同期を担う小さなアダプタ。
+     いまは LocalDeviceAdapter（同一端末のタブ・ウィンドウ間）。
+     次の段階で FirebaseAdapter などを同じインターフェースで差し替える。
+
+     interface SyncAdapter {
+       start(handlers): void
+         handlers.onRemote(msg)
+         handlers.onPresence(list)
+         handlers.onStatus(kind)  // "saving" | "saved" | "error"
+       persist(state): void       // 永続化 + 他クライアントへフル状態を配信
+       broadcast(message): void   // パッチ・在席など軽量メッセージ
+       publishPresence(info): void
+       stop(): void
+     }
+     ============================================================ */
+  function LocalDeviceAdapter() {
+    this.tabId = (function () {
+      try {
+        var k = "scenario-kyosaku-tab";
+        var id = sessionStorage.getItem(k);
+        if (!id) { id = uid(); sessionStorage.setItem(k, id); }
+        return id;
+      } catch (e) { return uid(); }
+    })();
+    this.channel = typeof BroadcastChannel !== "undefined" ? new BroadcastChannel(CHANNEL_NAME) : null;
+    this.handlers = null;
+    this._onMsg = this._onMsg.bind(this);
+    this._onStorage = this._onStorage.bind(this);
+    this._presence = {};
+    this._heart = null;
+    this._presenceInfo = null;
+  }
+  LocalDeviceAdapter.prototype.start = function (handlers) {
+    this.handlers = handlers;
+    if (this.channel) this.channel.onmessage = this._onMsg;
+    window.addEventListener("storage", this._onStorage);
+    var self = this;
+    this._heart = setInterval(function () {
+      if (self._presenceInfo) self.publishPresence(self._presenceInfo);
+      self._expirePresence();
+    }, 1500);
+    window.addEventListener("beforeunload", function () {
+      self.broadcast({ type: "leave", tabId: self.tabId });
+    });
+  };
+  LocalDeviceAdapter.prototype.stop = function () {
+    if (this.channel) { this.channel.close(); this.channel = null; }
+    window.removeEventListener("storage", this._onStorage);
+    clearInterval(this._heart);
+  };
+  LocalDeviceAdapter.prototype.persist = function (state) {
+    var h = this.handlers;
+    if (h && h.onStatus) h.onStatus("saving");
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      this.broadcast({ type: "full-state", state: state, ts: now() });
+      if (h && h.onStatus) h.onStatus("saved");
+    } catch (e) {
+      if (h && h.onStatus) h.onStatus("error");
+    }
+  };
+  LocalDeviceAdapter.prototype.broadcast = function (message) {
+    var msg = Object.assign({ tabId: this.tabId, ts: now() }, message);
+    if (this.channel) {
+      try { this.channel.postMessage(msg); } catch (e) {}
+    }
+  };
+  LocalDeviceAdapter.prototype.publishPresence = function (info) {
+    this._presenceInfo = info;
+    var payload = Object.assign({ type: "presence", tabId: this.tabId, ts: now() }, info);
+    this.broadcast(payload);
+  };
+  LocalDeviceAdapter.prototype._onMsg = function (ev) {
+    var msg = ev && ev.data;
+    if (!msg || msg.tabId === this.tabId) return;
+    if (msg.type === "presence") {
+      this._presence[msg.tabId] = msg;
+      this._emitPresence();
+      return;
+    }
+    if (msg.type === "leave") {
+      delete this._presence[msg.tabId];
+      this._emitPresence();
+      return;
+    }
+    if (this.handlers && this.handlers.onRemote) this.handlers.onRemote(msg);
+  };
+  LocalDeviceAdapter.prototype._onStorage = function (ev) {
+    if (ev.key !== STORAGE_KEY || !ev.newValue) return;
+    try {
+      var parsed = JSON.parse(ev.newValue);
+      if (this.handlers && this.handlers.onRemote) {
+        this.handlers.onRemote({ type: "full-state", state: parsed, tabId: "storage", ts: now() });
+      }
+    } catch (e) {}
+  };
+  LocalDeviceAdapter.prototype._expirePresence = function () {
+    var t = now(), changed = false;
+    Object.keys(this._presence).forEach(function (id) {
+      if (t - (this._presence[id].ts || 0) > 4000) {
+        delete this._presence[id];
+        changed = true;
+      }
+    }, this);
+    this._emitPresence();
+  };
+  LocalDeviceAdapter.prototype._emitPresence = function () {
+    var list = [];
+    var map = this._presence;
+    Object.keys(map).forEach(function (id) { list.push(map[id]); });
+    if (this.handlers && this.handlers.onPresence) this.handlers.onPresence(list);
+  };
+
+  /* Future hook example (not used in the prototype):
+     function FirebaseAdapter(config) {
+       // start / persist / broadcast / publishPresence / stop
+       // を同じ形で実装し、adapter = new FirebaseAdapter(...) と差し替える。
+     }
+  */
+
+  var session = { projectId: null, writerId: null, activeBlockId: null, panel: null };
+  (function loadSession() {
+    try {
+      session.projectId = sessionStorage.getItem("scenario-kyosaku-project") || null;
+      session.writerId = sessionStorage.getItem("scenario-kyosaku-writer") || null;
+    } catch (e) {}
+  })();
+  function persistSession() {
+    try {
+      if (session.projectId) sessionStorage.setItem("scenario-kyosaku-project", session.projectId);
+      if (session.writerId) sessionStorage.setItem("scenario-kyosaku-writer", session.writerId);
+    } catch (e) {}
+  }
+
+  var state = emptyState();
+  var adapter = new LocalDeviceAdapter();
+  var presenceList = [];
+  var composing = false;
+  var typingUntil = 0;
+  var saveTimer = null;
+  var patchTimer = null;
+  var pendingPatches = [];
+  var dragSceneIndex = null;
+  var lastSnapshotAt = {};
+  var importMode = "ask";
+
+  function getProject() {
+    var id = session.projectId;
+    for (var i = 0; i < state.projects.length; i++) if (state.projects[i].id === id) return state.projects[i];
+    return null;
+  }
+  function getWriter() {
+    var id = session.writerId;
+    for (var i = 0; i < state.writers.length; i++) if (state.writers[i].id === id) return state.writers[i];
+    return state.writers[0] || null;
+  }
+  function writerById(id) {
+    for (var i = 0; i < state.writers.length; i++) if (state.writers[i].id === id) return state.writers[i];
+    return null;
+  }
+  function blockById(project, id) {
+    if (!project) return null;
+    for (var i = 0; i < project.blocks.length; i++) if (project.blocks[i].id === id) return project.blocks[i];
+    return null;
+  }
+  function hashiraIndex(project, blockId) {
+    var n = 0;
+    for (var i = 0; i < project.blocks.length; i++) {
+      if (project.blocks[i].type === "hashira") {
+        n++;
+        if (project.blocks[i].id === blockId) return n;
+      }
+    }
+    return 0;
+  }
+  function scenesOf(project) {
+    var scenes = [];
+    var cur = { hashiraId: null, title: "（柱の前）", number: 0, blockIds: [], index: 0 };
+    (project.blocks || []).forEach(function (b) {
+      if (b.type === "hashira") {
+        if (cur.blockIds.length) scenes.push(cur);
+        cur = {
+          hashiraId: b.id,
+          title: b.text || "無題の場",
+          number: 0,
+          blockIds: [b.id],
+          index: scenes.length
+        };
+      } else {
+        cur.blockIds.push(b.id);
+      }
+    });
+    if (cur.blockIds.length) scenes.push(cur);
+    var n = 0;
+    scenes.forEach(function (s) {
+      if (s.hashiraId) { n++; s.number = n; }
+      else s.number = 0;
+    });
+    return scenes;
+  }
+
+  function buildDemo() {
+    var w1 = { id: "w-nishihara", name: "西原", color: "#6e7a8b" };
+    var w2 = { id: "w-takahashi", name: "高橋", color: "#8b6e6e" };
+    var c1 = { id: "c-kenta", name: "健太", color: "#6e7a8b", note: "50代。地方劇団の俳優" };
+    var c2 = { id: "c-misa", name: "ミサ", color: "#8b6e6e", note: "20代。劇団に来た脚本家" };
+    function blk(type, text, authorId, characterName) {
+      var b = newBlock(type, authorId);
+      b.text = text;
+      b.characterName = characterName || "";
+      b.history = [{
+        id: uid(), authorId: authorId, createdAt: now() - 3600000,
+        type: type, text: text, characterName: characterName || ""
+      }];
+      return b;
+    }
+    var p = {
+      id: "demo-gogo-no-daihon",
+      title: "午後の台本",
+      logline: "地方劇場の楽屋で、ベテラン俳優と新人脚本家が、書けない一行をめぐって静かに言い合う。",
+      characters: [c1, c2],
+      createdAt: now() - 86400000,
+      updatedAt: now(),
+      blocks: [
+        blk("hashira", "地方劇場の楽屋　午後", w1.id),
+        blk("togaki", "窓から西日が斜めに差し、ハンガーに掛かった衣装が長い影を落としている。健太は台本の端を指で折り、同じ行を何度も読んでいる。ミサは床に座ったまま、ボールペンの先を唇に当てている。", w1.id),
+        blk("serifu", "この行は、俺の口から出る言葉じゃないな", w1.id, "健太"),
+        blk("serifu", "出ないんじゃなくて、まだ慣れてないだけだと思います", w2.id, "ミサ"),
+        blk("serifu", "慣れる、か。二十年やってきて、いまさら", w1.id, "健太"),
+        blk("hashira", "舞台袖　夕方", w2.id),
+        blk("togaki", "緞帳の向こうで、誰かが照明の位置を直している。光が漏れ、二人の頬だけが白く照らされる。", w2.id),
+        blk("serifu", "書き換えます。ただし、いまの健太さんの間は残したいんです", w2.id, "ミサ"),
+        blk("serifu", "間だけ残して、言葉を変えるのか", w1.id, "健太"),
+        blk("serifu", "言葉は、間の前に置く石みたいなものです。石が重いと、間が死にます", w2.id, "ミサ"),
+        blk("togaki", "健太は台本を閉じ、袖の暗がりで一度息を吐く。", w1.id),
+        blk("serifu", "……じゃあ、今夜までに一回だけ、古い石でやってみてくれ", w1.id, "健太"),
+        blk("hashira", "楽屋　夜", w2.id),
+        blk("togaki", "蛍光灯が一つだけ点いている。差し入れの饅頭が、包みのままテーブルに残っている。", w2.id),
+        blk("serifu", "直しました。朝、もう一度だけ読んでください", w2.id, "ミサ"),
+        blk("serifu", "読むよ。ただし条件がある", w1.id, "健太"),
+        blk("serifu", "何でしょう", w2.id, "ミサ"),
+        blk("serifu", "明日の朝は、お前も声に出して読め。書いた側が、一番逃げたがるからな", w1.id, "健太"),
+        blk("togaki", "ミサは短く笑って、台本を健太の膝に置く。楽屋の時計が、静かに九時を打つ。", w2.id)
+      ]
+    };
+    p.blocks[2].comments = [{
+      id: uid(), authorId: w2.id, text: "この一行、もう少しだけ間を置いてもよいかも。", createdAt: now() - 7200000
+    }];
+    return { writers: [w1, w2], project: p };
+  }
+  function ensureDemo(force) {
+    var demo = buildDemo();
+    var hasW = false, hasP = false;
+    state.writers.forEach(function (w) { if (w.id === "w-nishihara" || w.id === "w-takahashi") hasW = true; });
+    state.projects.forEach(function (p) { if (p.id === "demo-gogo-no-daihon") hasP = true; });
+    if (!hasW || force) {
+      demo.writers.forEach(function (w) {
+        var found = false;
+        state.writers.forEach(function (x, i) { if (x.id === w.id) { state.writers[i] = w; found = true; } });
+        if (!found) state.writers.push(w);
+      });
+    }
+    if (!hasP || force) {
+      var replaced = false;
+      state.projects.forEach(function (p, i) { if (p.id === demo.project.id) { state.projects[i] = demo.project; replaced = true; } });
+      if (!replaced) state.projects.push(demo.project);
+    }
+    session.projectId = demo.project.id;
+    if (!session.writerId) session.writerId = demo.writers[0].id;
+    persistSession();
+  }
+
+  function loadLocal() {
+    try {
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        var s = JSON.parse(raw);
+        if (s && typeof s === "object") {
+          state.writers = s.writers || [];
+          state.projects = s.projects || [];
+          state.version = 1;
+        }
+      }
+    } catch (e) {}
+  }
+  function scheduleSave() {
+    setSaveStatus("saving");
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(function () { adapter.persist(state); }, 400);
+  }
+  function flushSave() {
+    clearTimeout(saveTimer);
+    adapter.persist(state);
+  }
+  function schedulePatch(msg) {
+    pendingPatches.push(msg);
+    clearTimeout(patchTimer);
+    patchTimer = setTimeout(flushPatches, 80);
+  }
+  function flushPatches() {
+    var list = pendingPatches;
+    pendingPatches = [];
+    list.forEach(function (m) { adapter.broadcast(m); });
+  }
+
+  function mergeRemoteState(remote) {
+    if (!remote || !remote.projects) return;
+    var focused = isEditing();
+    var focusId = session.activeBlockId;
+    var localBlock = null;
+    var proj = getProject();
+    if (focused && proj) localBlock = deepClone(blockById(proj, focusId));
+    state.writers = mergeById(state.writers, remote.writers);
+    var map = {};
+    state.projects.forEach(function (p) { map[p.id] = p; });
+    (remote.projects || []).forEach(function (rp) {
+      if (!map[rp.id]) { map[rp.id] = rp; return; }
+      map[rp.id] = mergeProject(map[rp.id], rp, focusId, localBlock);
+    });
+    var ids = {};
+    (remote.projects || []).forEach(function (p) { ids[p.id] = true; });
+    state.projects.forEach(function (p) { if (!ids[p.id]) map[p.id] = p; });
+    var keys = Object.keys(map);
+    var next = [];
+    keys.forEach(function (k) { next.push(map[k]); });
+    state.projects = next;
+  }
+  function mergeById(localArr, remoteArr) {
+    var map = {};
+    (localArr || []).forEach(function (x) { map[x.id] = x; });
+    (remoteArr || []).forEach(function (x) { map[x.id] = x; });
+    var out = [];
+    var seen = {};
+    (remoteArr || []).forEach(function (x) { out.push(map[x.id]); seen[x.id] = true; });
+    (localArr || []).forEach(function (x) { if (!seen[x.id]) out.push(x); });
+    return out;
+  }
+  function mergeProject(local, remote, focusId, localBlockSnap) {
+    var out = deepClone(local);
+    if ((remote.updatedAt || 0) >= (local.updatedAt || 0)) {
+      out.title = remote.title;
+      out.logline = remote.logline;
+      out.characters = remote.characters || out.characters;
+      out.updatedAt = remote.updatedAt;
+    }
+    var lmap = {};
+    (local.blocks || []).forEach(function (b) { lmap[b.id] = b; });
+    var blocks = [];
+    var seen = {};
+    (remote.blocks || []).forEach(function (rb) {
+      var lb = lmap[rb.id];
+      if (!lb) { blocks.push(rb); seen[rb.id] = true; return; }
+      var pick = rb;
+      if ((lb.updatedAt || 0) > (rb.updatedAt || 0)) pick = lb;
+      if (focusId && rb.id === focusId && localBlockSnap) {
+        if ((localBlockSnap.updatedAt || 0) >= (rb.updatedAt || 0)) pick = localBlockSnap;
+      }
+      pick = deepClone(pick);
+      pick.comments = mergeById(lb.comments || [], rb.comments || []);
+      var hist = mergeById(lb.history || [], rb.history || []);
+      hist.sort(function (a, b) { return (a.createdAt || 0) - (b.createdAt || 0); });
+      pick.history = hist.slice(-30);
+      blocks.push(pick);
+      seen[rb.id] = true;
+    });
+    (local.blocks || []).forEach(function (b) { if (!seen[b.id]) blocks.push(b); });
+    out.blocks = blocks;
+    return out;
+  }
+
+  function onRemote(msg) {
+    if (msg.type === "full-state" && msg.state) {
+      mergeRemoteState(msg.state);
+      renderAll({ fromRemote: true });
+      return;
+    }
+    if (msg.type === "block-upsert") {
+      var p = null;
+      state.projects.forEach(function (x) { if (x.id === msg.projectId) p = x; });
+      if (!p || !msg.block) return;
+      if (session.activeBlockId === msg.block.id && isEditing()) {
+        var lb = blockById(p, msg.block.id);
+        if (lb && (lb.updatedAt || 0) >= (msg.block.updatedAt || 0)) return;
+      }
+      var found = false;
+      p.blocks.forEach(function (b, i) {
+        if (b.id === msg.block.id) {
+          var comments = mergeById(b.comments || [], msg.block.comments || []);
+          var history = mergeById(b.history || [], msg.block.history || []);
+          p.blocks[i] = Object.assign({}, b, msg.block, { comments: comments, history: history });
+          found = true;
+        }
+      });
+      if (!found) {
+        var idx = msg.afterId ? indexOfBlock(p, msg.afterId) + 1 : p.blocks.length;
+        p.blocks.splice(idx, 0, msg.block);
+      }
+      p.updatedAt = now();
+      renderAll({ fromRemote: true });
+      return;
+    }
+    if (msg.type === "block-delete") {
+      var p2 = null;
+      state.projects.forEach(function (x) { if (x.id === msg.projectId) p2 = x; });
+      if (!p2) return;
+      p2.blocks = p2.blocks.filter(function (b) { return b.id !== msg.blockId; });
+      renderAll({ fromRemote: true });
+      return;
+    }
+    if (msg.type === "blocks-order") {
+      var p3 = null;
+      state.projects.forEach(function (x) { if (x.id === msg.projectId) p3 = x; });
+      if (!p3 || !msg.ids) return;
+      var bmap = {};
+      p3.blocks.forEach(function (b) { bmap[b.id] = b; });
+      var next = [];
+      msg.ids.forEach(function (id) { if (bmap[id]) next.push(bmap[id]); });
+      p3.blocks.forEach(function (b) { if (next.indexOf(b) < 0) next.push(b); });
+      p3.blocks = next;
+      renderAll({ fromRemote: true });
+      return;
+    }
+    if (msg.type === "project-meta") {
+      var p4 = null;
+      state.projects.forEach(function (x) { if (x.id === msg.projectId) p4 = x; });
+      if (!p4) return;
+      if (msg.title != null) p4.title = msg.title;
+      if (msg.logline != null) p4.logline = msg.logline;
+      if (msg.characters) p4.characters = msg.characters;
+      p4.updatedAt = now();
+      renderAll({ fromRemote: true });
+    }
+  }
+  function indexOfBlock(p, id) {
+    for (var i = 0; i < p.blocks.length; i++) if (p.blocks[i].id === id) return i;
+    return -1;
+  }
+  function isEditing() {
+    var el = document.activeElement;
+    return el && (el.classList.contains("blk-text") || el.classList.contains("char-name") || el.id === "project-title");
+  }
+
+  function setSaveStatus(kind) {
+    var el = document.getElementById("save-status");
+    if (!el) return;
+    el.className = kind === "saving" ? "saving" : (kind === "error" ? "err" : "");
+    el.textContent = kind === "saving" ? "保存中…" : (kind === "error" ? "保存できません" : "保存済み");
+  }
+  function currentPresenceInfo() {
+    var w = getWriter();
+    var el = document.activeElement;
+    var cursor = 0, field = "text";
+    if (el && typeof el.selectionStart === "number") {
+      cursor = el.selectionStart;
+      field = el.classList.contains("char-name") ? "characterName" : "text";
+    }
+    return {
+      writerId: w ? w.id : null,
+      writerName: w ? w.name : "",
+      color: w ? w.color : PALETTE[0],
+      projectId: session.projectId,
+      blockId: session.activeBlockId,
+      field: field,
+      cursor: cursor,
+      typing: now() < typingUntil
+    };
+  }
+  function sendPresence() {
+    adapter.publishPresence(currentPresenceInfo());
+  }
+  function markTyping() {
+    typingUntil = now() + 1200;
+    sendPresence();
+  }
+  function onPresence(list) {
+    var projId = session.projectId;
+    presenceList = (list || []).filter(function (p) { return p.projectId === projId; });
+    renderPresence();
+    updateRemoteCarets();
+  }
+
+  function touchBlock(block) {
+    var w = getWriter();
+    block.authorId = w ? w.id : block.authorId;
+    block.updatedAt = now();
+    var p = getProject();
+    if (p) p.updatedAt = now();
+  }
+  function snapshotBlock(block, force) {
+    if (!block) return;
+    var last = (block.history || [])[(block.history || []).length - 1];
+    if (!force && last && last.text === block.text && last.characterName === (block.characterName || "") && last.type === block.type) return;
+    var t = now();
+    if (!force && lastSnapshotAt[block.id] && t - lastSnapshotAt[block.id] < 2500) return;
+    lastSnapshotAt[block.id] = t;
+    block.history = (block.history || []).concat([{
+      id: uid(),
+      authorId: block.authorId,
+      createdAt: t,
+      type: block.type,
+      text: block.text,
+      characterName: block.characterName || ""
+    }]).slice(-30);
+  }
+  function upsertLocalBlock(block, afterId) {
+    var p = getProject();
+    if (!p) return;
+    schedulePatch({ type: "block-upsert", projectId: p.id, block: deepClone(block), afterId: afterId || null });
+    scheduleSave();
+  }
+  function setBlockType(block, type) {
+    if (!block || block.type === type) return;
+    snapshotBlock(block, true);
+    block.type = type;
+    touchBlock(block);
+    upsertLocalBlock(block);
+    renderAll();
+    focusBlock(block.id, type === "serifu" ? "name" : "text");
+  }
+  function addBlockAfter(afterId, type) {
+    var p = getProject();
+    if (!p) return;
+    var w = getWriter();
+    var b = newBlock(type, w ? w.id : "");
+    var i = indexOfBlock(p, afterId);
+    p.blocks.splice(i < 0 ? p.blocks.length : i + 1, 0, b);
+    p.updatedAt = now();
+    session.activeBlockId = b.id;
+    upsertLocalBlock(b, afterId);
+    renderAll();
+    focusBlock(b.id, type === "serifu" ? "name" : "text");
+    return b;
+  }
+  function deleteBlock(id) {
+    var p = getProject();
+    if (!p || p.blocks.length <= 1) return;
+    var i = indexOfBlock(p, id);
+    p.blocks = p.blocks.filter(function (b) { return b.id !== id; });
+    p.updatedAt = now();
+    adapter.broadcast({ type: "block-delete", projectId: p.id, blockId: id });
+    scheduleSave();
+    var next = p.blocks[Math.max(0, i - 1)] || p.blocks[0];
+    session.activeBlockId = next ? next.id : null;
+    renderAll();
+    if (next) focusBlock(next.id, "text");
+  }
+  function moveScene(from, to) {
+    var p = getProject();
+    if (!p) return;
+    var scenes = scenesOf(p);
+    if (from < 0 || to < 0 || from >= scenes.length || to >= scenes.length) return;
+    var item = scenes.splice(from, 1)[0];
+    scenes.splice(to, 0, item);
+    var next = [];
+    scenes.forEach(function (s) {
+      s.blockIds.forEach(function (id) {
+        var b = blockById(p, id);
+        if (b) next.push(b);
+      });
+    });
+    p.blocks = next;
+    p.updatedAt = now();
+    adapter.broadcast({ type: "blocks-order", projectId: p.id, ids: next.map(function (b) { return b.id; }) });
+    scheduleSave();
+    renderAll();
+  }
+  function applyBlockInput(blockId, field, value) {
+    var p = getProject();
+    var b = blockById(p, blockId);
+    if (!b) return;
+    session.activeBlockId = blockId;
+    if (field === "characterName") b.characterName = value;
+    else b.text = value;
+    touchBlock(b);
+    maybeAutoAddCharacter(b);
+    upsertLocalBlock(b);
+    markTyping();
+    renderSidebarOnly();
+    renderTypeButtons();
+  }
+  function maybeAutoAddCharacter(block) {
+    if (block.type !== "serifu") return;
+    var name = (block.characterName || "").trim();
+    if (!name) return;
+    var p = getProject();
+    if (!p) return;
+    for (var i = 0; i < p.characters.length; i++) if (p.characters[i].name === name) return;
+    p.characters.push(newChar(name, PALETTE[p.characters.length % PALETTE.length]));
+    adapter.broadcast({ type: "project-meta", projectId: p.id, characters: p.characters });
+  }
+
+  function showApp() {
+    document.getElementById("start").classList.add("hidden");
+    document.getElementById("app").hidden = false;
+  }
+  function showStart() {
+    document.getElementById("start").classList.remove("hidden");
+    document.getElementById("app").hidden = true;
+  }
+  function renderAll(opts) {
+    opts = opts || {};
+    var p = getProject();
+    if (!p) { showStart(); return; }
+    showApp();
+    renderHeader();
+    renderToolbar();
+    renderSidebarOnly();
+    renderLogline();
+    syncEditor(opts);
+    renderPresence();
+    updateRemoteCarets();
+    if (session.panel) renderPanel();
+    autosizeAll();
+    requestAnimationFrame(function () { autosizeAll(); updateRemoteCarets(); });
+  }
+  function renderHeader() {
+    var p = getProject();
+    var title = document.getElementById("project-title");
+    if (document.activeElement !== title) title.value = p ? (p.title || "") : "";
+    var w = getWriter();
+    var av = document.getElementById("me-avatar");
+    if (w) {
+      av.textContent = initials(w.name);
+      av.style.background = w.color;
+    }
+    var sel = document.getElementById("writer-select");
+    var html = "";
+    state.writers.forEach(function (wr) {
+      html += "<option value=\"" + escapeHtml(wr.id) + "\"" + (w && wr.id === w.id ? " selected" : "") + ">" + escapeHtml(wr.name) + "</option>";
+    });
+    html += "<option value=\"__new__\">＋ 書き手を追加</option>";
+    if (sel.innerHTML !== html) {
+      var keep = document.activeElement === sel;
+      sel.innerHTML = html;
+      if (w) sel.value = w.id;
+      if (keep) sel.focus();
+    } else if (w) {
+      sel.value = w.id;
+    }
+    document.title = (p && p.title ? p.title + " — " : "") + "シナリオ共作";
+  }
+  function renderToolbar() { renderTypeButtons(); }
+  function renderTypeButtons() {
+    var p = getProject();
+    var b = blockById(p, session.activeBlockId) || (p && p.blocks[0]);
+    var t = b ? b.type : "togaki";
+    ["hashira", "togaki", "serifu"].forEach(function (k) {
+      document.getElementById("btn-type-" + k).classList.toggle("on", t === k);
+    });
+  }
+  function renderLogline() {
+    var p = getProject();
+    var el = document.getElementById("logline-view");
+    var t = p && p.logline ? p.logline : "";
+    el.textContent = t;
+    el.style.display = t ? "" : "none";
+  }
+  function renderSidebarOnly() {
+    var p = getProject();
+    if (!p) return;
+    var scenes = scenesOf(p);
+    var wrap = document.getElementById("scene-list");
+    var html = "";
+    scenes.forEach(function (s, i) {
+      var on = s.blockIds.indexOf(session.activeBlockId) >= 0;
+      html += '<div class="scene-item' + (on ? " on" : "") + '" draggable="true" data-scene-index="' + i + '" data-jump="' + escapeHtml(s.hashiraId || s.blockIds[0]) + '">';
+      html += '<span class="grip" aria-hidden="true">⋮⋮</span>';
+      html += '<span class="num">' + (s.hashiraId ? "○" + fwNum(s.number) : "—") + "</span>";
+      html += '<span class="ttl">' + escapeHtml(s.title || "無題の場") + "</span>";
+      html += '<span class="scene-move"><button type="button" data-scene-up="' + i + '" aria-label="上へ">▲</button>';
+      html += '<button type="button" data-scene-down="' + i + '" aria-label="下へ">▼</button></span>';
+      html += "</div>";
+    });
+    if (!scenes.length) html = '<div class="tool-hint" style="padding:8px">まだ柱がありません</div>';
+    wrap.innerHTML = html;
+    var pg = pagesOf(p);
+    var chars = countChars(p);
+    document.getElementById("side-stats").innerHTML =
+      "原稿用紙換算 <strong>" + (chars ? pg.toFixed(1) : "0") + "枚</strong><br>" +
+      "目安の上演時間 <strong>約" + (chars ? (pg < 1 ? "1分未満" : Math.round(pg) + "分") : "0分") + "</strong><br>" +
+      "<span style=\"color:var(--faint)\">" + chars + "字／400字詰め　1枚≈1分</span>";
+    var lg = "";
+    state.writers.forEach(function (w) {
+      lg += '<span class="lg"><i style="background:' + escapeHtml(w.color) + '"></i>' + escapeHtml(w.name) + "</span>";
+    });
+    document.getElementById("side-legend").innerHTML = lg;
+  }
+
+  function syncEditor(opts) {
+    opts = opts || {};
+    var p = getProject();
+    var wrap = document.getElementById("blocks");
+    if (!p) { wrap.innerHTML = ""; return; }
+    var focused = document.activeElement;
+    var focusId = focused && focused.dataset ? focused.dataset.blockId : null;
+    var focusField = focused && focused.classList.contains("char-name") ? "name" : "text";
+    var selStart = focused && typeof focused.selectionStart === "number" ? focused.selectionStart : null;
+    var selEnd = focused && typeof focused.selectionEnd === "number" ? focused.selectionEnd : null;
+    var existing = {};
+    Array.prototype.forEach.call(wrap.children, function (el) {
+      if (el.dataset && el.dataset.blockId) existing[el.dataset.blockId] = el;
+    });
+    var used = {};
+    var hi = 0;
+    p.blocks.forEach(function (b) {
+      if (b.type === "hashira") hi++;
+      var el = existing[b.id];
+      if (!el) el = buildBlockEl(b, hi);
+      else updateBlockEl(el, b, hi, opts.fromRemote && focusId === b.id && isEditing());
+      used[b.id] = true;
+      wrap.appendChild(el);
+    });
+    Object.keys(existing).forEach(function (id) {
+      if (!used[id]) existing[id].remove();
+    });
+    if (opts.fromRemote && focusId && selStart != null) {
+      var again = wrap.querySelector(focusField === "name" ? '.char-name[data-block-id="' + focusId + '"]' : 'textarea[data-block-id="' + focusId + '"]');
+      if (again && document.activeElement !== again) {
+        again.focus();
+        try { again.setSelectionRange(selStart, selEnd); } catch (e) {}
+      }
+    }
+  }
+  function buildBlockEl(b, hi) {
+    var el = document.createElement("div");
+    el.className = "block " + b.type;
+    el.dataset.blockId = b.id;
+    el.innerHTML = blockInnerHtml(b, hi);
+    bindBlockEl(el, b);
+    paintBlockChrome(el, b);
+    autosize(el.querySelector("textarea"));
+    return el;
+  }
+  function updateBlockEl(el, b, hi, skipFocusedValue) {
+    if (el.className.indexOf("block") < 0) return;
+    if (!el.dataset.builtType || el.dataset.builtType !== b.type) {
+      var active = document.activeElement;
+      var keep = active && el.contains(active);
+      var ss = keep && typeof active.selectionStart === "number" ? active.selectionStart : null;
+      var field = keep && active.classList.contains("char-name") ? "name" : "text";
+      el.className = "block " + b.type + (session.activeBlockId === b.id ? " active" : "");
+      el.innerHTML = blockInnerHtml(b, hi);
+      bindBlockEl(el, b);
+      if (keep) {
+        var n = el.querySelector(field === "name" ? ".char-name" : "textarea");
+        if (n) { n.focus(); if (ss != null) try { n.setSelectionRange(ss, ss); } catch (e) {} }
+      }
+    } else {
+      var num = el.querySelector(".hashira-num");
+      if (num) num.textContent = "○" + fwNum(hi) + "　";
+      var ta = el.querySelector("textarea");
+      if (ta && !(skipFocusedValue && document.activeElement === ta) && ta.value !== (b.text || "")) {
+        ta.value = b.text || "";
+        autosize(ta);
+      }
+      var cn = el.querySelector(".char-name");
+      if (cn && !(skipFocusedValue && document.activeElement === cn) && cn.value !== (b.characterName || "")) {
+        cn.value = b.characterName || "";
+      }
+      var badge = el.querySelector(".cmt-badge");
+      if (badge) {
+        var ncm = (b.comments || []).length;
+        badge.textContent = ncm ? "コメント " + ncm : "コメント";
+        badge.classList.toggle("has", ncm > 0);
+      }
+    }
+    el.dataset.builtType = b.type;
+    el.classList.toggle("active", session.activeBlockId === b.id);
+    el.classList.remove("hashira", "togaki", "serifu");
+    el.classList.add("block", b.type);
+    paintBlockChrome(el, b);
+  }
+  function blockInnerHtml(b, hi) {
+    var ncm = (b.comments || []).length;
+    var html = '<span class="bar"></span><div class="block-meta">';
+    html += '<span class="kind">' + TYPE_LABEL[b.type] + "</span>";
+    html += '<span class="remote-slot"></span>';
+    html += '<span class="meta-actions">';
+    html += '<button type="button" class="cmt-badge' + (ncm ? " has" : "") + '" data-open-panel="comments">' + (ncm ? "コメント " + ncm : "コメント") + "</button>";
+    html += '<button type="button" data-open-panel="history">変更履歴</button>';
+    html += '<button type="button" data-del-block="1" aria-label="削除">削除</button>';
+    html += "</span></div>";
+    if (b.type === "hashira") {
+      html += '<div class="hashira-row"><span class="hashira-num">○' + fwNum(hi) + "　</span>";
+      html += '<textarea class="blk-text" rows="1" data-block-id="' + escapeHtml(b.id) + '" placeholder="場所　昼／夜">' + escapeHtml(b.text) + "</textarea></div>";
+    } else if (b.type === "serifu") {
+      html += '<div class="serifu-row"><div class="char-wrap">';
+      html += '<input type="text" class="char-name" data-block-id="' + escapeHtml(b.id) + '" placeholder="役名" autocomplete="off" value="' + escapeHtml(b.characterName || "") + '">';
+      html += '<div class="ac hidden"></div></div>';
+      html += '<div class="dialogue"><span class="bq">「</span>';
+      html += '<textarea class="blk-text" rows="1" data-block-id="' + escapeHtml(b.id) + '" placeholder="台詞">' + escapeHtml(b.text) + "</textarea></div></div>";
+    } else {
+      html += '<textarea class="blk-text" rows="1" data-block-id="' + escapeHtml(b.id) + '" placeholder="動作や情景を書く">' + escapeHtml(b.text) + "</textarea>";
+    }
+    return html;
+  }
+  function paintBlockChrome(el, b) {
+    var w = writerById(b.authorId);
+    el.style.setProperty("--author", w ? w.color : "var(--line-strong)");
+    el.querySelector(".bar").style.background = w ? w.color : "var(--line-strong)";
+  }
+  function bindBlockEl(el, b) {
+    el.dataset.builtType = b.type;
+    el.addEventListener("mousedown", function () { session.activeBlockId = b.id; });
+    var ta = el.querySelector("textarea");
+    if (ta) bindTextarea(ta, b.id);
+    var cn = el.querySelector(".char-name");
+    if (cn) bindCharName(cn, b.id, el.querySelector(".ac"));
+  }
+  function bindTextarea(ta, blockId) {
+    ta.addEventListener("input", function () {
+      if (composing) return;
+      applyBlockInput(blockId, "text", ta.value);
+      autosize(ta);
+    });
+    ta.addEventListener("compositionstart", function () { composing = true; });
+    ta.addEventListener("compositionend", function () {
+      composing = false;
+      applyBlockInput(blockId, "text", ta.value);
+      autosize(ta);
+    });
+    ta.addEventListener("focus", function () {
+      session.activeBlockId = blockId;
+      renderTypeButtons();
+      highlightActive();
+      sendPresence();
+    });
+    ta.addEventListener("blur", function () {
+      var p = getProject();
+      snapshotBlock(blockById(p, blockId), false);
+      scheduleSave();
+    });
+    ta.addEventListener("keydown", function (e) { onEditorKey(e, blockId, "text", ta); });
+    ta.addEventListener("keyup", function () { sendPresence(); });
+    ta.addEventListener("click", function () { sendPresence(); });
+  }
+  function bindCharName(cn, blockId, ac) {
+    cn.addEventListener("input", function () {
+      applyBlockInput(blockId, "characterName", cn.value);
+      showAutocomplete(cn, ac);
+    });
+    cn.addEventListener("focus", function () {
+      session.activeBlockId = blockId;
+      renderTypeButtons();
+      highlightActive();
+      showAutocomplete(cn, ac);
+      sendPresence();
+    });
+    cn.addEventListener("blur", function () {
+      setTimeout(function () { if (ac) ac.classList.add("hidden"); }, 150);
+      var p = getProject();
+      snapshotBlock(blockById(p, blockId), false);
+    });
+    cn.addEventListener("keydown", function (e) { onEditorKey(e, blockId, "name", cn); });
+  }
+  function showAutocomplete(cn, ac) {
+    var p = getProject();
+    if (!p || !ac) return;
+    var q = (cn.value || "").trim();
+    var items = (p.characters || []).filter(function (c) {
+      return !q || c.name.indexOf(q) >= 0;
+    });
+    if (!items.length) { ac.classList.add("hidden"); ac.innerHTML = ""; return; }
+    ac.innerHTML = items.map(function (c) {
+      return '<button type="button" data-name="' + escapeHtml(c.name) + '"><i style="background:' + escapeHtml(c.color) + '"></i>' + escapeHtml(c.name) + "</button>";
+    }).join("");
+    ac.classList.remove("hidden");
+    Array.prototype.forEach.call(ac.querySelectorAll("button"), function (btn) {
+      btn.addEventListener("mousedown", function (e) {
+        e.preventDefault();
+        cn.value = btn.getAttribute("data-name") || "";
+        applyBlockInput(cn.dataset.blockId, "characterName", cn.value);
+        ac.classList.add("hidden");
+        var ta = cn.closest(".block").querySelector("textarea");
+        if (ta) ta.focus();
+      });
+    });
+  }
+  function highlightActive() {
+    var wrap = document.getElementById("blocks");
+    Array.prototype.forEach.call(wrap.querySelectorAll(".block"), function (el) {
+      el.classList.toggle("active", el.dataset.blockId === session.activeBlockId);
+    });
+    renderSidebarOnly();
+  }
+  function autosize(ta) {
+    if (!ta) return;
+    ta.style.height = "auto";
+    ta.style.height = Math.max(ta.scrollHeight, 28) + "px";
+  }
+  function autosizeAll() {
+    var list = document.querySelectorAll("#blocks textarea.blk-text");
+    Array.prototype.forEach.call(list, autosize);
+  }
+  function focusBlock(id, field) {
+    setTimeout(function () {
+      var sel = field === "name"
+        ? '.char-name[data-block-id="' + id + '"]'
+        : 'textarea[data-block-id="' + id + '"]';
+      var el = document.querySelector(sel) || document.querySelector('textarea[data-block-id="' + id + '"]');
+      if (el) {
+        el.focus();
+        try { var n = el.value.length; el.setSelectionRange(n, n); } catch (e) {}
+        if (el.closest(".block")) el.closest(".block").scrollIntoView({ block: "nearest" });
+      }
+    }, 0);
+  }
+
+  function renderPresence() {
+    var box = document.getElementById("presence-avatars");
+    var tip = document.getElementById("typing-indicator");
+    var me = getWriter();
+    var byWriter = {};
+    if (me) {
+      byWriter[me.id] = { writerId: me.id, writerName: me.name, color: me.color, typing: now() < typingUntil, me: true };
+    }
+    presenceList.forEach(function (p) {
+      if (!p.writerId) return;
+      var cur = byWriter[p.writerId];
+      if (!cur) byWriter[p.writerId] = { writerId: p.writerId, writerName: p.writerName, color: p.color, typing: !!p.typing, me: false };
+      else if (p.typing) cur.typing = true;
+    });
+    var ids = Object.keys(byWriter);
+    box.innerHTML = ids.map(function (id) {
+      var p = byWriter[id];
+      return '<span class="avatar' + (p.me ? " me" : "") + '" data-typing="' + (p.typing && !p.me ? "1" : "0") + '" style="background:' + escapeHtml(p.color) + '" title="' + escapeHtml(p.writerName + (p.me ? "（あなた）" : "")) + '">' + escapeHtml(initials(p.writerName)) + "</span>";
+    }).join("");
+    var typers = [];
+    presenceList.forEach(function (p) {
+      if (p.typing && p.writerName && (!me || p.writerId !== me.id)) typers.push(p.writerName);
+    });
+    typers = typers.filter(function (n, i) { return typers.indexOf(n) === i; });
+    tip.textContent = typers.length ? typers.join("、") + "が入力中…" : "";
+  }
+
+  function updateRemoteCarets() {
+    var wrap = document.getElementById("blocks");
+    if (!wrap) return;
+    Array.prototype.forEach.call(wrap.querySelectorAll(".caret"), function (c) { c.remove(); });
+    Array.prototype.forEach.call(wrap.querySelectorAll(".block"), function (el) {
+      el.classList.remove("remote-edit");
+      el.style.removeProperty("--presence");
+      var slot = el.querySelector(".remote-slot");
+      if (slot) slot.innerHTML = "";
+    });
+    var me = getWriter();
+    presenceList.forEach(function (p) {
+      if (!p.blockId) return;
+      if (me && p.writerId === me.id) return;
+      var el = wrap.querySelector('.block[data-block-id="' + p.blockId + '"]');
+      if (!el) return;
+      el.classList.add("remote-edit");
+      el.style.setProperty("--presence", p.color || "#8b6e6e");
+      var slot = el.querySelector(".remote-slot");
+      if (slot && p.writerName) {
+        slot.innerHTML = '<span class="remote-tag">' + escapeHtml(p.writerName) + (p.typing ? "が入力中…" : "") + "</span>";
+      }
+      var fieldEl = p.field === "characterName"
+        ? el.querySelector(".char-name")
+        : el.querySelector("textarea");
+      if (fieldEl) placeCaret(el, fieldEl, p.cursor || 0, p.color, p.writerName);
+    });
+  }
+  function placeCaret(blockEl, fieldEl, pos, color, name) {
+    try {
+      var coords = caretCoords(fieldEl, pos);
+      var c = document.createElement("div");
+      c.className = "caret";
+      c.style.setProperty("--presence", color);
+      c.style.background = color;
+      var br = blockEl.getBoundingClientRect();
+      c.style.left = (coords.left - br.left + blockEl.scrollLeft) + "px";
+      c.style.top = (coords.top - br.top + blockEl.scrollTop) + "px";
+      c.style.height = coords.height + "px";
+      var lab = document.createElement("span");
+      lab.className = "caret-label";
+      lab.style.setProperty("--presence", color);
+      lab.style.background = color;
+      lab.textContent = name || "";
+      c.appendChild(lab);
+      blockEl.appendChild(c);
+    } catch (e) {}
+  }
+  function caretCoords(input, pos) {
+    var div = document.createElement("div");
+    var st = window.getComputedStyle(input);
+    var props = ["font-family","font-size","font-weight","font-style","letter-spacing","line-height","text-indent","padding-top","padding-right","padding-bottom","padding-left","border-top-width","border-right-width","border-bottom-width","border-left-width","box-sizing","text-align","white-space","word-wrap","width"];
+    props.forEach(function (p) { div.style[p] = st[p]; });
+    div.style.position = "absolute";
+    div.style.visibility = "hidden";
+    div.style.whiteSpace = "pre-wrap";
+    div.style.wordWrap = "break-word";
+    div.style.overflow = "hidden";
+    div.style.width = input.clientWidth + "px";
+    var val = input.value || "";
+    var before = val.slice(0, pos);
+    var after = val.slice(pos);
+    div.textContent = before;
+    var span = document.createElement("span");
+    span.textContent = after.length ? after[0] : "　";
+    div.appendChild(span);
+    document.body.appendChild(div);
+    var ir = input.getBoundingClientRect();
+    var sr = span.getBoundingClientRect();
+    var dr = div.getBoundingClientRect();
+    var top = ir.top + (sr.top - dr.top) - input.scrollTop;
+    var left = ir.left + (sr.left - dr.left) - input.scrollLeft;
+    var height = parseFloat(st.lineHeight) || sr.height || 20;
+    document.body.removeChild(div);
+    return { top: top, left: left, height: height };
+  }
+
+  function openPanel(kind, blockId) {
+    session.panel = kind;
+    session.activeBlockId = blockId || session.activeBlockId;
+    document.getElementById("panel").classList.remove("hidden");
+    renderPanel();
+    if (window.innerWidth <= 860) document.getElementById("scrim").classList.remove("hidden");
+  }
+  function closePanel() {
+    session.panel = null;
+    document.getElementById("panel").classList.add("hidden");
+    document.getElementById("scrim").classList.add("hidden");
+  }
+  function renderPanel() {
+    var p = getProject();
+    var b = blockById(p, session.activeBlockId);
+    var title = document.getElementById("panel-title");
+    var body = document.getElementById("panel-body");
+    if (!b) { body.innerHTML = "<p class=\"lead\">ブロックを選んでください。</p>"; return; }
+    if (session.panel === "history") {
+      title.textContent = "変更履歴";
+      var hs = (b.history || []).slice().reverse();
+      var h = "";
+      if (!hs.length) h = "<p class=\"lead\">まだ履歴がありません。編集すると、ここに書き手と時刻が残ります。</p>";
+      hs.forEach(function (item) {
+        var w = writerById(item.authorId);
+        var preview = item.type === "serifu"
+          ? (item.characterName || "") + "「" + (item.text || "") + "」"
+          : (item.text || "（空）");
+        h += '<div class="hist"><div><span class="who" style="color:' + escapeHtml(w ? w.color : "inherit") + '">' + escapeHtml(w ? w.name : "不明") + '</span><span class="when">' + escapeHtml(fmtTime(item.createdAt)) + '</span></div>';
+        h += '<div class="tx">' + escapeHtml(preview) + "</div>";
+        h += '<button type="button" class="btn ghost" data-restore="' + escapeHtml(item.id) + '">この内容に戻す</button></div>';
+      });
+      body.innerHTML = h;
+    } else {
+      title.textContent = "コメント";
+      var h2 = "";
+      (b.comments || []).forEach(function (c) {
+        var w = writerById(c.authorId);
+        h2 += '<div class="cmt"><div><span class="who" style="color:' + escapeHtml(w ? w.color : "inherit") + '">' + escapeHtml(w ? w.name : "不明") + '</span><span class="when">' + escapeHtml(fmtTime(c.createdAt)) + "</span></div>";
+        h2 += '<div class="tx">' + escapeHtml(c.text) + "</div></div>";
+      });
+      if (!b.comments || !b.comments.length) h2 += "<p class=\"lead\">このブロックへのコメントはまだありません。</p>";
+      h2 += '<label class="field-label" for="cmt-input">新しいコメント</label>';
+      h2 += '<textarea id="cmt-input" class="area" rows="3" placeholder="気づいたことを残す"></textarea>';
+      h2 += '<div class="modal-actions"><button type="button" class="btn primary" id="btn-add-cmt">書き込む</button></div>';
+      body.innerHTML = h2;
+      var btn = document.getElementById("btn-add-cmt");
+      if (btn) btn.addEventListener("click", addComment);
+    }
+  }
+  function addComment() {
+    var ta = document.getElementById("cmt-input");
+    var text = ta && ta.value.trim();
+    if (!text) return;
+    var p = getProject();
+    var b = blockById(p, session.activeBlockId);
+    var w = getWriter();
+    if (!b) return;
+    b.comments = (b.comments || []).concat([{ id: uid(), authorId: w ? w.id : "", text: text, createdAt: now() }]);
+    touchBlock(b);
+    upsertLocalBlock(b);
+    renderAll();
+    openPanel("comments", b.id);
+  }
+  function restoreHistory(hid) {
+    var p = getProject();
+    var b = blockById(p, session.activeBlockId);
+    if (!b) return;
+    var item = null;
+    (b.history || []).forEach(function (h) { if (h.id === hid) item = h; });
+    if (!item) return;
+    snapshotBlock(b, true);
+    b.type = item.type;
+    b.text = item.text;
+    b.characterName = item.characterName || "";
+    touchBlock(b);
+    upsertLocalBlock(b);
+    renderAll();
+    openPanel("history", b.id);
+  }
+
+  function cycleType(block, dir) {
+    var order = ["hashira", "togaki", "serifu"];
+    var i = order.indexOf(block.type);
+    var next = order[(i + dir + 3) % 3];
+    setBlockType(block, next);
+  }
+  function onEditorKey(e, blockId, field, el) {
+    var p = getProject();
+    var b = blockById(p, blockId);
+    if (!b) return;
+    var meta = e.metaKey || e.ctrlKey;
+    if (e.key === "Tab") {
+      e.preventDefault();
+      if (field === "name" && !e.shiftKey) {
+        var ta = el.closest(".block").querySelector("textarea");
+        if (ta) { ta.focus(); return; }
+      }
+      cycleType(b, e.shiftKey ? -1 : 1);
+      return;
+    }
+    if (meta && (e.key === "1" || e.key === "2" || e.key === "3")) {
+      e.preventDefault();
+      setBlockType(b, e.key === "1" ? "hashira" : e.key === "2" ? "togaki" : "serifu");
+      return;
+    }
+    if (e.key === "Enter" && !e.shiftKey && !composing) {
+      if (field === "name") {
+        e.preventDefault();
+        var ta2 = el.closest(".block").querySelector("textarea");
+        if (ta2) ta2.focus();
+        return;
+      }
+      e.preventDefault();
+      var nextType = b.type === "hashira" ? "togaki" : b.type;
+      addBlockAfter(b.id, nextType);
+      return;
+    }
+    if (e.key === "Backspace" && !composing && field !== "name") {
+      if (el.selectionStart === 0 && el.selectionEnd === 0 && !(b.text || "")) {
+        e.preventDefault();
+        deleteBlock(b.id);
+      }
+    }
+  }
+
+  function toPlainText(project) {
+    var lines = [];
+    if (project.title) lines.push("『" + project.title + "』", "");
+    if (project.logline) lines.push(project.logline, "");
+    if (project.characters && project.characters.length) {
+      lines.push("登場人物：" + project.characters.map(function (c) { return c.name; }).join("、"), "");
+    }
+    var hi = 0;
+    (project.blocks || []).forEach(function (b) {
+      if (b.type === "hashira") {
+        hi++;
+        if (lines.length && lines[lines.length - 1] !== "") lines.push("");
+        lines.push("○" + fwNum(hi) + "　" + (b.text || ""), "");
+      } else if (b.type === "serifu") {
+        var body = b.text || "";
+        if (/^「.*」$/.test(body)) lines.push((b.characterName || "") + body);
+        else lines.push((b.characterName || "") + "「" + body + "」");
+      } else {
+        lines.push("　" + (b.text || ""));
+      }
+    });
+    lines.push("");
+    return lines.join("\n");
+  }
+  function exportTxt() {
+    var p = getProject();
+    if (!p) return;
+    downloadFile((p.title || "scenario") + ".txt", toPlainText(p), "text/plain;charset=utf-8");
+  }
+  function exportJson(all) {
+    var payload;
+    if (all) {
+      payload = { kind: "scenario-kyosaku-backup", version: 1, writers: state.writers, projects: state.projects, exportedAt: now() };
+    } else {
+      var p = getProject();
+      if (!p) return;
+      payload = { kind: "scenario-kyosaku-share", version: 1, writers: state.writers, project: p, exportedAt: now() };
+    }
+    var name = all ? "scenario-kyosaku-backup.json" : ((getProject().title || "scenario") + ".json");
+    downloadFile(name, JSON.stringify(payload, null, 2), "application/json;charset=utf-8");
+  }
+  function downloadFile(name, text, mime) {
+    var blob = new Blob([text], { type: mime });
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = name;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+  }
+  function importJsonText(text, mode) {
+    var data;
+    try { data = JSON.parse(text); } catch (e) { alert("JSONを読み取れませんでした。"); return; }
+    if (!data || typeof data !== "object") return;
+    if (data.writers && data.writers.length) {
+      data.writers.forEach(function (w) {
+        var found = false;
+        state.writers.forEach(function (x, i) { if (x.id === w.id) { state.writers[i] = w; found = true; } });
+        if (!found) state.writers.push(w);
+      });
+    }
+    if (data.kind === "scenario-kyosaku-backup" || data.projects) {
+      if (mode === "replace") {
+        state.projects = data.projects || [];
+      } else {
+        (data.projects || []).forEach(function (rp) { importOneProject(rp, mode); });
+      }
+    } else if (data.project) {
+      importOneProject(data.project, mode);
+    } else if (data.id && data.blocks) {
+      importOneProject(data, mode);
+    } else {
+      alert("このファイルはシナリオ共作の共有ファイルではないようです。");
+      return;
+    }
+    if (!session.writerId && state.writers[0]) session.writerId = state.writers[0].id;
+    if (!session.projectId && state.projects[0]) session.projectId = state.projects[0].id;
+    persistSession();
+    flushSave();
+    renderAll();
+    closeModal();
+  }
+  function importOneProject(rp, mode) {
+    var found = -1;
+    state.projects.forEach(function (p, i) { if (p.id === rp.id) found = i; });
+    if (found < 0 || mode === "copy") {
+      if (mode === "copy" || found >= 0) {
+        rp = deepClone(rp);
+        rp.id = uid();
+        rp.title = (rp.title || "無題") + "（取り込み）";
+      }
+      state.projects.push(rp);
+      session.projectId = rp.id;
+      return;
+    }
+    if (mode === "replace-one") {
+      state.projects[found] = rp;
+      session.projectId = rp.id;
+      return;
+    }
+    state.projects[found] = mergeProject(state.projects[found], rp, null, null);
+    session.projectId = rp.id;
+  }
+
+  function openPrint() {
+    var p = getProject();
+    if (!p) return;
+    document.getElementById("manuscript").innerHTML = buildManuscriptPages(p);
+    document.getElementById("print-view").classList.add("open");
+  }
+  function closePrint() { document.getElementById("print-view").classList.remove("open"); }
+  function buildManuscriptPages(p) {
+    var items = [];
+    function add(html, len) { items.push({ html: html, len: len || 1 }); }
+    if (p.title) add('<div class="doc-title">『' + escapeHtml(p.title) + '』</div>', (p.title || '').length + 2);
+    if (p.logline) add('<div class="doc-line">' + escapeHtml(p.logline) + "</div>", (p.logline || "").length);
+    if (p.characters && p.characters.length) {
+      var cl = "登場人物：" + p.characters.map(function (c) { return c.name; }).join("、");
+      add('<div class="doc-line">' + escapeHtml(cl) + "</div>", cl.length);
+    }
+    var hi = 0;
+    (p.blocks || []).forEach(function (b) {
+      if (b.type === "hashira") {
+        hi++;
+        var h = "○" + fwNum(hi) + "　" + (b.text || "");
+        add('<div class="hshi">' + escapeHtml(h) + "</div>", h.length + 8);
+      } else if (b.type === "serifu") {
+        var body = b.text || "";
+        var shown = /^「.*」$/.test(body) ? (b.characterName || "") + body : (b.characterName || "") + "「" + body + "」";
+        add('<div class="sr">' + escapeHtml(shown) + "</div>", shown.length);
+      } else {
+        add('<div class="tg">' + escapeHtml(b.text || "") + "</div>", (b.text || "").length);
+      }
+    });
+    var pages = [];
+    var cur = [];
+    var count = 0;
+    items.forEach(function (it) {
+      if (count && count + it.len > 260) {
+        pages.push(cur);
+        cur = [];
+        count = 0;
+      }
+      cur.push(it.html);
+      count += it.len;
+    });
+    if (cur.length) pages.push(cur);
+    pages = pages.filter(function (c) { return c && c.length; });
+    if (pages.length >= 2 && pages[pages.length - 1].length <= 1) {
+      pages[pages.length - 2] = pages[pages.length - 2].concat(pages.pop());
+    }
+    return pages.map(function (c) {
+      return '<section class="genko">' + c.join("") + "</section>";
+    }).join("");
+  }
+
+  var modalBg = document.getElementById("modal-bg");
+  function openModal(html) {
+    modalBg.innerHTML = '<div class="modal" role="dialog" aria-modal="true">' + html + "</div>";
+    modalBg.classList.remove("hidden");
+  }
+  function closeModal() {
+    modalBg.classList.add("hidden");
+    modalBg.innerHTML = "";
+  }
+  function openShare() {
+    var p = getProject();
+    var url = location.origin + location.pathname + (p ? ("?p=" + encodeURIComponent(p.id)) : "");
+    if (location.protocol === "file:") url = location.href.split("?")[0] + (p ? ("?p=" + encodeURIComponent(p.id)) : "");
+    openModal(
+      "<h2>共有</h2>" +
+      "<p class=\"lead\">Googleドキュメントのように、いま開いている作品をほかの書き手と同時に編集します。</p>" +
+      "<div class=\"notice\"><strong>試作について。</strong>いまは同じ端末の別タブ・別ウィンドウで、変更がリアルタイムに反映されます（BroadcastChannel による同期）。別の端末や別の人とリアルタイムで共有するには、サーバーが必要です。次の段階で Firebase などの接続を予定しています。</div>" +
+      "<label class=\"field-label\">この端末内のリンク</label>" +
+      "<div class=\"share-link\"><input type=\"text\" id=\"share-url\" readonly value=\"" + escapeHtml(url) + "\">" +
+      "<button type=\"button\" class=\"btn\" id=\"btn-copy-link\">コピー</button></div>" +
+      "<p class=\"lead\" style=\"margin-top:16px\">別の人とやり取りする暫定手段として、共有ファイル（JSON）を書き出して相手に渡し、取り込む（マージする）ことができます。</p>" +
+      "<div class=\"modal-actions\" style=\"justify-content:flex-start\">" +
+      "<button type=\"button\" class=\"btn primary\" id=\"btn-export-share\">共有ファイルを書き出す</button>" +
+      "<button type=\"button\" class=\"btn\" id=\"btn-import-merge\">共有ファイルを取り込む（マージ）</button>" +
+      "<button type=\"button\" class=\"btn ghost\" data-close-modal>閉じる</button></div>"
+    );
+  }
+  function openChars() {
+    var p = getProject();
+    if (!p) return;
+    var rows = p.characters.map(function (c, i) {
+      return '<div class="char-row" data-i="' + i + '">' +
+        '<button type="button" class="swatch" data-cycle-color="' + i + '" style="background:' + escapeHtml(c.color) + '" aria-label="色"></button>' +
+        '<input type="text" data-char-name="' + i + '" value="' + escapeHtml(c.name) + '" placeholder="役名">' +
+        '<input type="text" data-char-note="' + i + '" value="' + escapeHtml(c.note || "") + '" placeholder="メモ">' +
+        '<button type="button" class="icon-btn" data-del-char="' + i + '" aria-label="削除">×</button></div>';
+    }).join("");
+    openModal(
+      "<h2>登場人物</h2>" +
+      "<p class=\"lead\">セリフの役名は、この一覧から補完されます。色は一覧用です。</p>" +
+      "<div id=\"char-rows\">" + (rows || "<p class=\"lead\">まだ登録がありません。</p>") + "</div>" +
+      "<div class=\"modal-actions\" style=\"justify-content:space-between\">" +
+      "<button type=\"button\" class=\"btn\" id=\"btn-add-char\">役を追加</button>" +
+      "<span><button type=\"button\" class=\"btn primary\" id=\"btn-save-chars\">完了</button></span></div>"
+    );
+  }
+  function readCharsFromModal() {
+    var p = getProject();
+    if (!p) return;
+    var rows = modalBg.querySelectorAll(".char-row");
+    var next = [];
+    rows.forEach(function (row, i) {
+      var old = p.characters[i] || newChar("");
+      var name = (row.querySelector("[data-char-name]") || {}).value || "";
+      var note = (row.querySelector("[data-char-note]") || {}).value || "";
+      var color = (row.querySelector(".swatch") && row.querySelector(".swatch").style.background) || old.color;
+      next.push({ id: old.id, name: name.trim(), color: rgbToHex(color) || old.color, note: note.trim() });
+    });
+    p.characters = next;
+    p.updatedAt = now();
+    adapter.broadcast({ type: "project-meta", projectId: p.id, characters: p.characters });
+    scheduleSave();
+  }
+  function rgbToHex(c) {
+    if (!c) return "";
+    if (c.indexOf("#") === 0) return c;
+    var m = String(c).match(/\d+/g);
+    if (!m || m.length < 3) return "";
+    return "#" + [0, 1, 2].map(function (i) {
+      return ("0" + Number(m[i]).toString(16)).slice(-2);
+    }).join("");
+  }
+  function openWriters() {
+    var rows = state.writers.map(function (w, i) {
+      return '<div class="writer-row" data-i="' + i + '">' +
+        '<button type="button" class="swatch" data-cycle-wcolor="' + i + '" style="background:' + escapeHtml(w.color) + '"></button>' +
+        '<input type="text" data-wname="' + i + '" value="' + escapeHtml(w.name) + '" placeholder="書き手の名前">' +
+        '<button type="button" class="icon-btn" data-del-w="' + i + '" aria-label="削除">×</button></div>';
+    }).join("");
+    openModal(
+      "<h2>書き手</h2>" +
+      "<p class=\"lead\">いまのタブでどの書き手として編集するかを選べます。ブロックの左の色は、最後に書いた人を表します。別タブで別の書き手を選べば、同時編集を体験できます。</p>" +
+      "<div id=\"writer-rows\">" + rows + "</div>" +
+      "<div class=\"modal-actions\" style=\"justify-content:space-between\">" +
+      "<button type=\"button\" class=\"btn\" id=\"btn-add-writer\">書き手を追加</button>" +
+      "<button type=\"button\" class=\"btn primary\" id=\"btn-save-writers\">完了</button></div>"
+    );
+  }
+  function readWritersFromModal() {
+    var rows = modalBg.querySelectorAll(".writer-row");
+    var next = [];
+    rows.forEach(function (row, i) {
+      var old = state.writers[i] || newWriter("");
+      var name = ((row.querySelector("[data-wname]") || {}).value || "").trim() || "書き手";
+      var color = rgbToHex((row.querySelector(".swatch") || {}).style.background) || old.color;
+      next.push({ id: old.id, name: name, color: color });
+    });
+    if (!next.length) next = [newWriter("自分", PALETTE[0])];
+    state.writers = next;
+    if (!writerById(session.writerId)) session.writerId = next[0].id;
+    persistSession();
+    scheduleSave();
+    sendPresence();
+  }
+  function openProjects() {
+    var pnow = getProject();
+    var items = state.projects.map(function (p) {
+      return '<div class="proj-item" data-open-proj="' + escapeHtml(p.id) + '"><div class="nm">' + escapeHtml(p.title || "無題") +
+        '<div class="sub">' + escapeHtml((p.logline || "").slice(0, 40) || "ログラインなし") + "　" + (p.blocks || []).length + "ブロック</div></div>" +
+        '<button type="button" class="btn ghost" data-ren-proj="' + escapeHtml(p.id) + '">改名</button>' +
+        '<button type="button" class="btn danger" data-del-proj="' + escapeHtml(p.id) + '">削除</button></div>';
+    }).join("") || "<p class=\"lead\">作品はまだありません。</p>";
+    openModal(
+      "<h2>作品の管理</h2>" +
+      '<label class="field-label">ログライン（いまの作品）</label>' +
+      '<textarea class="area" id="logline-input" rows="2" placeholder="物語を一行で">' + escapeHtml(pnow ? pnow.logline : "") + "</textarea>" +
+      "<div id=\"proj-list\" style=\"margin-top:16px\">" + items + "</div>" +
+      "<div class=\"modal-actions\" style=\"justify-content:space-between\">" +
+      "<button type=\"button\" class=\"btn\" id=\"btn-add-proj\">新しい作品</button>" +
+      "<button type=\"button\" class=\"btn primary\" id=\"btn-save-projmeta\">完了</button></div>"
+    );
+  }
+  function openHelp() {
+    openModal(
+      "<h2>ショートカット</h2>" +
+      "<p class=\"lead\">Tab … 柱 → ト書き → セリフ と切替（Shift+Tab で逆）<br>" +
+      "⌘ / Ctrl + 1 2 3 … 柱 / ト書き / セリフ<br>" +
+      "Enter … 次のブロックを追加（柱の次はト書き）<br>" +
+      "Shift+Enter … ブロック内で改行<br>" +
+      "空のブロックで Backspace … 削除<br>" +
+      "役名は登場人物一覧から補完されます。</p>" +
+      "<div class=\"modal-actions\"><button type=\"button\" class=\"btn primary\" data-close-modal>閉じる</button></div>"
+    );
+  }
+  function openImportAsk() {
+    importMode = "merge";
+    openModal(
+      "<h2>共有ファイルを取り込む</h2>" +
+      "<p class=\"lead\">相手が書き出した JSON を取り込みます。同じ作品（同じID）ならブロックをマージします。新しい作品なら一覧に追加します。これが試作における、別の人との共有方法です。リアルタイム同期にはサーバーが必要です。</p>" +
+      "<div class=\"modal-actions\" style=\"justify-content:flex-start\">" +
+      "<button type=\"button\" class=\"btn primary\" id=\"btn-pick-merge\">マージして取り込む</button>" +
+      "<button type=\"button\" class=\"btn\" id=\"btn-pick-copy\">コピーとして追加</button>" +
+      "<button type=\"button\" class=\"btn ghost\" data-close-modal>やめる</button></div>"
+    );
+  }
+
+  function bindGlobal() {
+    window.addEventListener("resize", debounce(autosizeAll, 120));
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(autosizeAll);
+    document.getElementById("btn-new").addEventListener("click", function () { createProjectInteractive(); });
+    document.getElementById("btn-demo").addEventListener("click", function () {
+      ensureDemo(true);
+      flushSave();
+      renderAll();
+    });
+    document.getElementById("btn-import-start").addEventListener("click", function () {
+      importMode = "merge";
+      document.getElementById("file-input").click();
+    });
+    document.getElementById("project-title").addEventListener("input", function (e) {
+      var p = getProject();
+      if (!p) return;
+      p.title = e.target.value;
+      p.updatedAt = now();
+      adapter.broadcast({ type: "project-meta", projectId: p.id, title: p.title });
+      scheduleSave();
+    });
+    document.getElementById("writer-select").addEventListener("change", function (e) {
+      if (e.target.value === "__new__") { openWriters(); renderHeader(); return; }
+      session.writerId = e.target.value;
+      persistSession();
+      renderHeader();
+      sendPresence();
+    });
+    document.getElementById("btn-share").addEventListener("click", openShare);
+    document.getElementById("btn-menu").addEventListener("click", function (e) {
+      e.stopPropagation();
+      document.getElementById("menu").classList.toggle("hidden");
+    });
+    document.body.addEventListener("click", function () { document.getElementById("menu").classList.add("hidden"); });
+    document.getElementById("menu").addEventListener("click", function (e) {
+      var act = e.target && e.target.getAttribute && e.target.getAttribute("data-act");
+      if (!act) return;
+      if (act === "projects") openProjects();
+      else if (act === "chars") openChars();
+      else if (act === "writers") openWriters();
+      else if (act === "print") openPrint();
+      else if (act === "txt") exportTxt();
+      else if (act === "json") exportJson(false);
+      else if (act === "import") openImportAsk();
+      else if (act === "help") openHelp();
+    });
+    document.getElementById("btn-chars").addEventListener("click", openChars);
+    document.getElementById("btn-print").addEventListener("click", openPrint);
+    document.getElementById("btn-export-txt").addEventListener("click", exportTxt);
+    document.getElementById("btn-scenes").addEventListener("click", function () {
+      document.getElementById("sidebar").classList.toggle("open");
+      var open = document.getElementById("sidebar").classList.contains("open");
+      document.getElementById("scrim").classList.toggle("hidden", !open && !session.panel);
+    });
+    document.getElementById("scrim").addEventListener("click", function () {
+      document.getElementById("sidebar").classList.remove("open");
+      closePanel();
+    });
+    document.getElementById("btn-panel-close").addEventListener("click", closePanel);
+    ["hashira", "togaki", "serifu"].forEach(function (t) {
+      document.getElementById("btn-type-" + t).addEventListener("click", function () {
+        var p = getProject();
+        var b = blockById(p, session.activeBlockId) || (p && p.blocks[0]);
+        if (b) setBlockType(b, t);
+      });
+    });
+    document.getElementById("btn-do-print").addEventListener("click", function () { window.print(); });
+    document.getElementById("btn-close-print").addEventListener("click", closePrint);
+    document.getElementById("file-input").addEventListener("change", function (e) {
+      var f = e.target.files && e.target.files[0];
+      e.target.value = "";
+      if (!f) return;
+      var reader = new FileReader();
+      reader.onload = function () { importJsonText(String(reader.result || ""), importMode || "merge"); };
+      reader.readAsText(f, "utf-8");
+    });
+    document.getElementById("scene-list").addEventListener("click", function (e) {
+      var up = e.target.closest("[data-scene-up]");
+      var down = e.target.closest("[data-scene-down]");
+      var item = e.target.closest(".scene-item");
+      if (up) { e.stopPropagation(); moveScene(+up.getAttribute("data-scene-up"), +up.getAttribute("data-scene-up") - 1); return; }
+      if (down) { e.stopPropagation(); moveScene(+down.getAttribute("data-scene-down"), +down.getAttribute("data-scene-down") + 1); return; }
+      if (item && item.getAttribute("data-jump")) {
+        var id = item.getAttribute("data-jump");
+        session.activeBlockId = id;
+        focusBlock(id, "text");
+        highlightActive();
+        if (window.innerWidth <= 860) document.getElementById("sidebar").classList.remove("open");
+      }
+    });
+    document.getElementById("scene-list").addEventListener("dragstart", function (e) {
+      var item = e.target.closest("[data-scene-index]");
+      if (!item) return;
+      dragSceneIndex = +item.getAttribute("data-scene-index");
+      e.dataTransfer.effectAllowed = "move";
+    });
+    document.getElementById("scene-list").addEventListener("dragover", function (e) { e.preventDefault(); });
+    document.getElementById("scene-list").addEventListener("drop", function (e) {
+      e.preventDefault();
+      var item = e.target.closest("[data-scene-index]");
+      if (!item || dragSceneIndex == null) return;
+      moveScene(dragSceneIndex, +item.getAttribute("data-scene-index"));
+      dragSceneIndex = null;
+    });
+    document.getElementById("blocks").addEventListener("click", function (e) {
+      var del = e.target.closest("[data-del-block]");
+      var pan = e.target.closest("[data-open-panel]");
+      var block = e.target.closest(".block");
+      if (block) session.activeBlockId = block.dataset.blockId;
+      if (del && block) { deleteBlock(block.dataset.blockId); return; }
+      if (pan && block) { openPanel(pan.getAttribute("data-open-panel"), block.dataset.blockId); return; }
+    });
+    modalBg.addEventListener("click", function (e) {
+      if (e.target === modalBg) closeModal();
+      if (e.target.closest && e.target.closest("[data-close-modal]")) closeModal();
+      if (e.target.id === "btn-copy-link") {
+        var inp = document.getElementById("share-url");
+        if (inp) {
+          inp.select();
+          try { navigator.clipboard.writeText(inp.value); } catch (err) { document.execCommand("copy"); }
+          e.target.textContent = "コピーしました";
+        }
+      }
+      if (e.target.id === "btn-export-share") { exportJson(false); }
+      if (e.target.id === "btn-import-merge") { importMode = "merge"; document.getElementById("file-input").click(); }
+      if (e.target.id === "btn-add-char") {
+        readCharsFromModal();
+        getProject().characters.push(newChar("", PALETTE[getProject().characters.length % PALETTE.length]));
+        openChars();
+      }
+      if (e.target.id === "btn-save-chars") { readCharsFromModal(); closeModal(); renderAll(); }
+      if (e.target.getAttribute && e.target.getAttribute("data-cycle-color") != null) {
+        var cur = rgbToHex(e.target.style.background);
+        var idx = PALETTE.indexOf(cur);
+        e.target.style.background = PALETTE[(idx + 1) % PALETTE.length];
+      }
+      if (e.target.getAttribute && e.target.getAttribute("data-del-char") != null) {
+        readCharsFromModal();
+        getProject().characters.splice(+e.target.getAttribute("data-del-char"), 1);
+        openChars();
+      }
+      if (e.target.id === "btn-add-writer") {
+        readWritersFromModal();
+        state.writers.push(newWriter("書き手" + (state.writers.length + 1), PALETTE[state.writers.length % PALETTE.length]));
+        openWriters();
+      }
+      if (e.target.id === "btn-save-writers") { readWritersFromModal(); closeModal(); renderAll(); }
+      if (e.target.getAttribute && e.target.getAttribute("data-cycle-wcolor") != null) {
+        var cur2 = rgbToHex(e.target.style.background);
+        var idx2 = PALETTE.indexOf(cur2);
+        e.target.style.background = PALETTE[(idx2 + 1) % PALETTE.length];
+      }
+      if (e.target.getAttribute && e.target.getAttribute("data-del-w") != null) {
+        readWritersFromModal();
+        if (state.writers.length > 1) {
+          state.writers.splice(+e.target.getAttribute("data-del-w"), 1);
+          if (!writerById(session.writerId)) session.writerId = state.writers[0].id;
+        }
+        openWriters();
+      }
+      if (e.target.id === "btn-add-proj") { closeModal(); createProjectInteractive(); }
+      if (e.target.id === "btn-save-projmeta") {
+        var p = getProject();
+        var ta = document.getElementById("logline-input");
+        if (p && ta) {
+          p.logline = ta.value;
+          p.updatedAt = now();
+          adapter.broadcast({ type: "project-meta", projectId: p.id, logline: p.logline });
+          scheduleSave();
+        }
+        closeModal(); renderAll();
+      }
+      var op = e.target.closest && e.target.closest("[data-open-proj]");
+      if (op && !e.target.closest("[data-ren-proj],[data-del-proj]")) {
+        session.projectId = op.getAttribute("data-open-proj");
+        persistSession(); closeModal(); renderAll();
+      }
+      if (e.target.getAttribute && e.target.getAttribute("data-ren-proj")) {
+        var id = e.target.getAttribute("data-ren-proj");
+        var proj = null;
+        state.projects.forEach(function (x) { if (x.id === id) proj = x; });
+        var name = prompt("作品名", proj ? proj.title : "");
+        if (name != null && proj) {
+          proj.title = name;
+          proj.updatedAt = now();
+          adapter.broadcast({ type: "project-meta", projectId: proj.id, title: proj.title });
+          scheduleSave();
+          openProjects();
+        }
+      }
+      if (e.target.getAttribute && e.target.getAttribute("data-del-proj")) {
+        var did = e.target.getAttribute("data-del-proj");
+        if (confirm("この作品を削除しますか？元に戻せません。")) {
+          state.projects = state.projects.filter(function (x) { return x.id !== did; });
+          if (session.projectId === did) session.projectId = state.projects[0] ? state.projects[0].id : null;
+          persistSession();
+          flushSave();
+          if (!session.projectId) { closeModal(); showStart(); }
+          else openProjects();
+        }
+      }
+      if (e.target.id === "btn-pick-merge") { importMode = "merge"; document.getElementById("file-input").click(); }
+      if (e.target.id === "btn-pick-copy") { importMode = "copy"; document.getElementById("file-input").click(); }
+    });
+    document.getElementById("panel-body").addEventListener("click", function (e) {
+      if (e.target.getAttribute && e.target.getAttribute("data-restore")) {
+        if (confirm("この時点の内容に戻しますか？いまの文は履歴に残ります。")) {
+          restoreHistory(e.target.getAttribute("data-restore"));
+        }
+      }
+    });
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape") {
+        closeModal(); closePrint(); document.getElementById("menu").classList.add("hidden");
+        document.getElementById("sidebar").classList.remove("open");
+      }
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "s") {
+        e.preventDefault();
+        flushSave();
+        setSaveStatus("saved");
+      }
+    });
+    document.addEventListener("compositionstart", function () { composing = true; });
+    document.addEventListener("compositionend", function () { composing = false; });
+  }
+
+  function createProjectInteractive() {
+    if (!state.writers.length) state.writers.push(newWriter("自分", PALETTE[0]));
+    if (!session.writerId) session.writerId = state.writers[0].id;
+    var p = newProject("無題", session.writerId);
+    state.projects.push(p);
+    session.projectId = p.id;
+    persistSession();
+    flushSave();
+    renderAll();
+    var t = document.getElementById("project-title");
+    if (t) { t.focus(); t.select(); }
+  }
+
+  function boot() {
+    loadLocal();
+    var params = new URLSearchParams(location.search);
+    if (params.get("demo") === "1") ensureDemo(false);
+    if (params.get("p")) {
+      var want = params.get("p");
+      var ok = state.projects.some(function (p) { return p.id === want; });
+      if (ok) session.projectId = want;
+    }
+    if (params.get("writer")) {
+      var wn = params.get("writer");
+      state.writers.forEach(function (w) {
+        if (w.id === wn || w.name === wn) session.writerId = w.id;
+      });
+    }
+    if (!session.writerId && state.writers[0]) session.writerId = state.writers[0].id;
+    if (!session.projectId && state.projects[0]) session.projectId = state.projects[0].id;
+    persistSession();
+
+    adapter.start({
+      onRemote: onRemote,
+      onPresence: onPresence,
+      onStatus: setSaveStatus
+    });
+    bindGlobal();
+    if (getProject()) {
+      renderAll();
+      setSaveStatus("saved");
+    } else {
+      showStart();
+    }
+    sendPresence();
+    setInterval(sendPresence, 1500);
+    if (params.get("print") === "1" && getProject()) openPrint();
+  }
+
+  window.__kyosaku = {
+    getState: function () { return state; },
+    getSession: function () { return session; },
+    getProject: getProject,
+    getWriter: getWriter,
+    setWriter: function (idOrName) {
+      state.writers.forEach(function (w) {
+        if (w.id === idOrName || w.name === idOrName) session.writerId = w.id;
+      });
+      persistSession();
+      renderHeader();
+      sendPresence();
+    },
+    setActiveBlock: function (id) { session.activeBlockId = id; },
+    toPlainText: function () { return getProject() ? toPlainText(getProject()) : ""; },
+    adapter: adapter,
+    pagesOf: pagesOf,
+    countChars: countChars
+  };
+
+  boot();
+})();
+
+</script>
+</body>
+</html>

@@ -8,6 +8,8 @@ https://yasuaki0129.github.io/kyuyo-calendar/
 
 公開サイト: https://yasuaki0129.github.io/kyuyo-calendar/
 
+シナリオ共作（試作）: https://yasuaki0129.github.io/kyuyo-calendar/scenario/
+
 ## iPhone のホーム画面に追加
 
 Safari でこのページを開き、共有 → ホーム画面に追加。
