@@ -6,6 +6,8 @@
 
 https://yasuaki0129.github.io/kyuyo-calendar/
 
+公開サイト: https://yasuaki0129.github.io/kyuyo-calendar/
+
 ## iPhone のホーム画面に追加
 
 Safari でこのページを開き、共有 → ホーム画面に追加。
