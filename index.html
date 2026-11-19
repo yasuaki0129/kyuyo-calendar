@@ -1,0 +1,2208 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="給与カレンダー">
+  <meta name="application-name" content="給与カレンダー">
+  <meta name="format-detection" content="telephone=no">
+  <title>給与カレンダー</title>
+  <meta name="theme-color" content="#ffffff">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="favicon.ico" sizes="48x48">
+  <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16.png">
+  <link rel="icon" type="image/svg+xml" href="icons/favicon.svg">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <style>
+    :root {
+      --bg: #ffffff;
+      --paper: #ffffff;
+      --ink: #1a1a1a;
+      --muted: #8a8680;
+      --line: #eceae6;
+      --line-strong: #d3cfc7;
+      --accent: #7f0019;
+      --accent-dark: #7f0019;
+      --today: transparent;
+      --sun: #164a32;
+      --sat: #1557c2;
+      --month-color: #164a32;
+      --year-color: #1557c2;
+      --num-font: "Helvetica Neue", Helvetica, Arial, "Liberation Sans", sans-serif;
+      --paid: #5a5a5a;
+      --billed: #4a4a4a;
+      --unbilled: #7f0019;
+      --track: #e6e2db;
+      --shadow: none;
+      --radius: 2px;
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+      --safe-left: env(safe-area-inset-left, 0px);
+      --safe-right: env(safe-area-inset-right, 0px);
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; background: var(--bg); color: var(--ink); }
+    body {
+      font-family: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Hiragino Kaku Gothic Pro", "Noto Sans JP", "Yu Gothic UI", "Yu Gothic", sans-serif;
+      font-size: 16px;
+      font-weight: 400;
+      line-height: 1.6;
+      letter-spacing: 0.02em;
+      -webkit-tap-highlight-color: transparent;
+    }
+    button, input, select, textarea { font: inherit; color: inherit; }
+    button { cursor: pointer; }
+    h1, h2, h3 { margin: 0; font-weight: 400; letter-spacing: 0.04em; }
+    [hidden] { display: none !important; }
+
+    .app {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: calc(20px + var(--safe-top)) calc(16px + var(--safe-right)) calc(40px + var(--safe-bottom)) calc(16px + var(--safe-left));
+    }
+    .topbar {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+    .brand { display: flex; flex-direction: column; min-width: 0; gap: 4px; }
+    .brand h1 {
+      font-size: 1.15rem;
+      font-weight: 400;
+      letter-spacing: 0.08em;
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+    }
+    .en, .kicker {
+      font-size: 0.62rem;
+      font-weight: 400;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--muted);
+      line-height: 1;
+    }
+    .brand .sub { font-size: 0.72rem; color: var(--muted); font-weight: 300; letter-spacing: 0.06em; }
+    .icon-btn {
+      min-width: 44px;
+      min-height: 44px;
+      border: 1px solid var(--ink);
+      background: transparent;
+      border-radius: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 12px;
+      box-shadow: none;
+      font-weight: 400;
+      letter-spacing: 0.1em;
+      font-size: 0.75rem;
+    }
+    .icon-btn:active { background: var(--ink); color: #fff; }
+    .month-nav {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 4px;
+      margin: 4px 0 18px;
+    }
+    .month-hero { flex: 1; min-width: 0; padding-top: 2px; }
+    .month-line {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+    }
+    .month-nav h2 {
+      font-family: var(--num-font);
+      font-size: 0;
+      font-weight: 800;
+      letter-spacing: 0;
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+      color: var(--month-color);
+      line-height: 0.9;
+    }
+    .month-num {
+      font-family: var(--num-font);
+      font-weight: 800;
+      font-size: 2.35rem;
+      letter-spacing: -0.05em;
+      font-variant-numeric: tabular-nums;
+      line-height: 0.9;
+    }
+    .month-name {
+      font-family: var(--num-font);
+      font-weight: 800;
+      font-size: 1.28rem;
+      letter-spacing: 0.01em;
+      line-height: 1;
+    }
+    .year-label {
+      font-family: var(--num-font);
+      font-weight: 800;
+      font-size: 1.15rem;
+      color: var(--year-color);
+      margin-left: auto;
+      letter-spacing: -0.02em;
+      font-variant-numeric: tabular-nums;
+    }
+    .month-ja {
+      font-size: 0.68rem;
+      color: var(--muted);
+      letter-spacing: 0.14em;
+      margin-top: 6px;
+      font-weight: 400;
+    }
+    .nav-arrow {
+      min-width: 44px;
+      min-height: 44px;
+      border: 0;
+      background: none;
+      border-radius: 0;
+      font-family: var(--num-font);
+      font-size: 1.55rem;
+      font-weight: 300;
+      color: #111;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      line-height: 1;
+    }
+    .nav-arrow:active { opacity: 0.4; }
+    .nav-today {
+      border: 0;
+      background: none;
+      min-height: 28px;
+      padding: 0;
+      margin-top: 4px;
+      font-size: 0.68rem;
+      letter-spacing: 0.16em;
+      color: var(--muted);
+      border-radius: 0;
+    }
+    .nav-today:active { color: var(--ink); }
+    .nav-side { display: flex; flex-direction: column; align-items: center; flex: 0 0 44px; }
+
+    .dow, .cal {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 0;
+    }
+    .dow span, .dow .dow-cell {
+      text-align: left;
+      padding: 0 2px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .dow-en {
+      font-family: var(--num-font);
+      font-size: 9px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      line-height: 1;
+    }
+    .dow-ja {
+      font-size: 8px;
+      font-weight: 400;
+      letter-spacing: 0.12em;
+      opacity: 0.7;
+    }
+    .cal {
+      border: 0;
+      background: transparent;
+      row-gap: 4px;
+    }
+    .cell {
+      min-height: 70px;
+      background: transparent;
+      border-radius: 0;
+      padding: 0 2px 4px;
+      border: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      text-align: left;
+      gap: 2px;
+      appearance: none;
+      width: 100%;
+      box-shadow: none;
+    }
+    .cell.empty { pointer-events: none; min-height: 70px; }
+    .cell .num, .cell button.num {
+      font-family: var(--num-font);
+      font-size: 1.72rem;
+      font-weight: 800;
+      padding: 0;
+      line-height: 0.92;
+      letter-spacing: -0.05em;
+      font-variant-numeric: tabular-nums;
+      font-feature-settings: "tnum";
+      align-self: flex-start;
+      background: none;
+      border: 0;
+      min-height: 0;
+      min-width: 0;
+    }
+    .num-block { display: flex; flex-direction: column; align-items: flex-start; }
+    .num-pair {
+      display: flex;
+      align-items: baseline;
+      gap: 0;
+      line-height: 0.92;
+    }
+    .num-pair .num, .num-pair button.num { font-size: 1.05rem; }
+    .date-slash {
+      font-family: var(--num-font);
+      font-weight: 700;
+      font-size: 0.85rem;
+      display: inline-block;
+      transform: rotate(-22deg);
+      margin: 0 1px;
+      line-height: 1;
+      opacity: 0.9;
+    }
+    .today-dot {
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: currentColor;
+      margin: 3px 0 1px 1px;
+    }
+    .cell:active { background: transparent; opacity: 0.7; }
+    .pair-entries { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; }
+
+    .chip {
+      display: block;
+      border-radius: 0;
+      padding: 1px 3px 1px 4px;
+      font-size: 8px;
+      line-height: 1.25;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      font-weight: 400;
+      letter-spacing: 0;
+      background: color-mix(in srgb, var(--c, #8a8680) 12%, #fff);
+      color: var(--ink);
+      border-left: 2px solid var(--c, #8a8680);
+    }
+    .chip.paid { opacity: 0.55; }
+    .chip .pj {
+      display: block;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .pay-marks {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0 3px;
+      margin-top: auto;
+      padding: 1px 1px 0;
+      line-height: 1;
+    }
+    .pay-yen {
+      font-size: 9px;
+      font-weight: 400;
+      line-height: 1;
+      letter-spacing: 0;
+    }
+    .pay-yen.paid { opacity: 0.4; }
+    .more {
+      font-size: 9px;
+      color: var(--muted);
+      font-weight: 400;
+      padding: 0 2px;
+      letter-spacing: 0.04em;
+    }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px 16px;
+      margin: 16px 0 8px;
+    }
+    .legend-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: 400;
+      letter-spacing: 0.04em;
+      color: var(--ink);
+    }
+    .swatch {
+      width: 8px;
+      height: 8px;
+      border-radius: 0;
+      flex: 0 0 8px;
+      box-shadow: none;
+    }
+
+    .card {
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 0;
+      padding: 20px 18px 22px;
+      margin-top: 16px;
+      box-shadow: none;
+    }
+    .card h3, .card-title {
+      font-size: 0.92rem;
+      color: var(--ink);
+      letter-spacing: 0.08em;
+      font-weight: 400;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+    }
+    .goal-head, .goal-amounts, .goal-foot, .toggle-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+    .goal-head h3 { margin-bottom: 0; }
+    .goal-amounts { align-items: flex-end; margin: 12px 0 14px; }
+    .goal-amounts .now {
+      font-size: 1.55rem;
+      font-weight: 400;
+      letter-spacing: 0.02em;
+      font-variant-numeric: tabular-nums;
+      font-feature-settings: "tnum";
+    }
+    .goal-amounts .meta {
+      font-size: 0.8rem;
+      color: var(--muted);
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+      font-feature-settings: "tnum";
+      font-weight: 400;
+      line-height: 1.7;
+    }
+    .bar {
+      height: 2px;
+      background: var(--track);
+      border-radius: 0;
+      overflow: hidden;
+    }
+    .bar > i {
+      display: block;
+      height: 100%;
+      width: 0;
+      background: linear-gradient(90deg, #164a32, #e8940c, #e45c3a, #d41818, #c41078, #5c24a0, #1557c2);
+      border-radius: 0;
+    }
+    .bar.done > i { background: linear-gradient(90deg, #164a32, #e8940c, #e45c3a, #d41818, #c41078, #5c24a0, #1557c2); }
+    .goal-foot {
+      margin-top: 12px;
+      font-size: 0.8rem;
+      color: var(--muted);
+      flex-wrap: wrap;
+      align-items: flex-start;
+      font-variant-numeric: tabular-nums;
+      font-feature-settings: "tnum";
+    }
+    .goal-foot strong { color: var(--ink); font-weight: 400; }
+    .goal-empty { color: var(--muted); font-size: 0.88rem; font-weight: 300; }
+
+    .stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0; border-top: 1px solid var(--line); }
+    .stat {
+      background: transparent;
+      border-radius: 0;
+      padding: 12px 8px 4px 0;
+      text-align: left;
+      border-right: 1px solid var(--line);
+    }
+    .stat:last-child { border-right: 0; padding-right: 0; }
+    .stat:not(:first-child) { padding-left: 12px; }
+    .stat .lbl { font-size: 0.62rem; color: var(--muted); letter-spacing: 0.14em; font-weight: 400; }
+    .stat .val {
+      font-size: 1rem;
+      font-weight: 400;
+      margin-top: 6px;
+      letter-spacing: 0.02em;
+      font-variant-numeric: tabular-nums;
+      font-feature-settings: "tnum";
+    }
+
+    .switch { position: relative; width: 44px; height: 24px; flex: 0 0 44px; }
+    .switch input {
+      appearance: none; width: 44px; height: 24px; margin: 0;
+      border-radius: 0; background: #fff; display: block;
+      border: 1px solid var(--ink);
+    }
+    .switch input:checked { background: var(--ink); }
+    .switch input::after {
+      content: "";
+      position: absolute;
+      top: 3px; left: 3px;
+      width: 16px; height: 16px;
+      border-radius: 0;
+      background: #fff;
+      border: 1px solid var(--ink);
+      box-shadow: none;
+      transition: transform 0.15s ease;
+    }
+    .switch input:checked::after {
+      transform: translateX(20px);
+      background: #fff;
+      border-color: #fff;
+    }
+    .withhold-lines { margin-top: 14px; font-size: 0.88rem; font-variant-numeric: tabular-nums; font-feature-settings: "tnum"; }
+    .withhold-lines div { display: flex; justify-content: space-between; gap: 8px; padding: 8px 0; border-top: 1px solid var(--line); }
+    .note { font-size: 0.72rem; color: var(--muted); margin-top: 10px; font-weight: 300; line-height: 1.7; }
+
+    .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; margin-top: 4px; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.78rem; font-variant-numeric: tabular-nums; font-feature-settings: "tnum"; }
+    th, td { padding: 10px 6px; text-align: right; border-bottom: 1px solid var(--line); white-space: nowrap; font-weight: 400; }
+    th { color: var(--muted); font-weight: 400; font-size: 0.62rem; letter-spacing: 0.12em; }
+    td.left, th.left { text-align: left; }
+    .client-cell { display: inline-flex; align-items: center; gap: 6px; }
+    tfoot td { font-weight: 400; border-bottom: 0; border-top: 1px solid var(--ink); }
+    .sub-row td { font-weight: 300; font-size: 0.75rem; color: var(--muted); }
+    .sub-row td.left { padding-left: 22px; text-align: left; }
+
+    .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 20px; }
+    .btn {
+      min-height: 48px;
+      border-radius: 0;
+      border: 1px solid var(--ink);
+      background: transparent;
+      font-weight: 400;
+      padding: 0 14px;
+      letter-spacing: 0.12em;
+      font-size: 0.8rem;
+      box-shadow: none;
+    }
+    .btn.primary { background: var(--ink); border-color: var(--ink); color: #fff; }
+    .btn.danger { background: transparent; border-color: var(--accent); color: var(--accent); }
+    .btn.ghost { background: transparent; border-color: var(--line-strong); color: var(--muted); }
+    .btn:active { opacity: 0.7; }
+
+    .backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(26, 26, 26, 0.35);
+      z-index: 20;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+    }
+    .sheet {
+      background: var(--paper);
+      width: 100%;
+      max-width: 720px;
+      max-height: min(92vh, 900px);
+      border-radius: 0;
+      padding: 12px calc(20px + var(--safe-right)) calc(20px + var(--safe-bottom)) calc(20px + var(--safe-left));
+      overflow: auto;
+      box-shadow: none;
+      border-top: 1px solid var(--line);
+    }
+    .grab {
+      width: 32px; height: 1px; border-radius: 0;
+      background: var(--line-strong); margin: 6px auto 16px;
+    }
+    .sheet-head {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 8px; margin-bottom: 20px;
+    }
+    .sheet-head h2 { font-size: 1.05rem; letter-spacing: 0.08em; font-weight: 400; }
+    .form-grid { display: grid; gap: 16px; }
+    label.fld, .fld {
+      display: flex; flex-direction: column; gap: 8px;
+      font-size: 0.68rem; font-weight: 400; color: var(--muted);
+      letter-spacing: 0.12em;
+    }
+    label.fld input, label.fld select, label.fld textarea {
+      min-height: 48px;
+      border: 0;
+      border-bottom: 1px solid var(--line-strong);
+      border-radius: 0;
+      background: transparent;
+      padding: 10px 0;
+      font-size: 16px;
+      width: 100%;
+      font-weight: 400;
+    }
+    label.fld input:focus, label.fld select:focus, label.fld textarea:focus {
+      outline: none;
+      border-bottom-color: var(--ink);
+    }
+    .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .seg {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0;
+      background: transparent;
+      padding: 0;
+      border-radius: 0;
+      border: 1px solid var(--ink);
+    }
+    .seg.three { grid-template-columns: 1fr 1fr 1fr; }
+    .seg button {
+      min-height: 40px; border: 0; background: transparent;
+      border-radius: 0; font-weight: 400; font-size: 0.8rem;
+      letter-spacing: 0.08em;
+      border-right: 1px solid var(--ink);
+    }
+    .seg button:last-child { border-right: 0; }
+    .seg button.on { background: var(--ink); color: #fff; box-shadow: none; }
+    .live { background: var(--bg); border-radius: 0; padding: 12px 14px; font-size: 0.88rem; font-variant-numeric: tabular-nums; }
+    .live div { display: flex; justify-content: space-between; }
+    .midnight { color: var(--accent); font-size: 0.75rem; margin-top: 4px; display: block; }
+
+    .entry-card {
+      border: 1px solid var(--line);
+      border-radius: 0;
+      padding: 12px 12px 12px 16px;
+      margin-bottom: 8px;
+      display: grid;
+      gap: 2px;
+      width: 100%;
+      text-align: left;
+      background: #fff;
+      position: relative;
+      overflow: hidden;
+      box-shadow: none;
+    }
+    .entry-card::before {
+      content: "";
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      width: 2px;
+      background: var(--c, var(--ink));
+    }
+    .entry-card .t { font-weight: 400; font-variant-numeric: tabular-nums; }
+    .entry-card .s { font-size: 0.78rem; color: var(--muted); font-weight: 300; }
+
+    .badge {
+      display: inline-block;
+      font-size: 0.62rem;
+      font-weight: 400;
+      border-radius: 0;
+      padding: 1px 6px;
+      background: transparent;
+      color: var(--muted);
+      border: 1px solid var(--line-strong);
+      letter-spacing: 0.1em;
+    }
+    .badge.unbilled { background: transparent; color: var(--accent); border-color: var(--accent); }
+    .badge.billed { background: transparent; color: var(--ink); border-color: var(--ink); }
+    .badge.paid { background: transparent; color: var(--muted); border-color: var(--line-strong); }
+    .empty { text-align: center; color: var(--muted); padding: 24px 8px; font-weight: 300; }
+
+    .palette { display: grid; grid-template-columns: repeat(8, 1fr); gap: 8px; margin: 10px 0 16px; }
+    .palette button {
+      aspect-ratio: 1; border-radius: 0; border: 1px solid transparent;
+      min-height: 36px; padding: 0;
+    }
+    .palette button.on { border-color: var(--ink); }
+    .client-row {
+      display: flex; align-items: center; gap: 10px;
+      padding: 12px 0; border-bottom: 1px solid var(--line);
+    }
+    .client-row .dot { width: 20px; height: 20px; border-radius: 0; border: 0; flex: 0 0 20px; }
+    .client-row .name { flex: 1; font-weight: 400; }
+    .pay-group { margin-bottom: 16px; }
+    .pay-group h3 { display: flex; align-items: center; gap: 8px; font-size: 0.92rem; margin-bottom: 6px; font-weight: 400; }
+    .pay-item {
+      display: flex; justify-content: space-between; gap: 8px;
+      font-size: 0.88rem; padding: 10px 0; border-bottom: 1px solid var(--line);
+      font-variant-numeric: tabular-nums;
+    }
+    .terms-summary { font-size: 0.72rem; font-weight: 300; color: var(--muted); letter-spacing: 0.04em; }
+    .pay-date-head { font-weight: 400; font-size: 0.95rem; margin: 20px 0 8px; letter-spacing: 0.06em; font-variant-numeric: tabular-nums; }
+    .preset-wrap { display: flex; flex-wrap: wrap; gap: 6px; }
+    .preset-wrap button {
+      min-height: 40px; border-radius: 0; border: 1px solid var(--ink);
+      background: transparent; font-weight: 400; font-size: 0.75rem;
+      padding: 0 10px; letter-spacing: 0.06em;
+    }
+    .preset-wrap button.on { background: var(--ink); color: #fff; border-color: var(--ink); }
+    .menu-list { display: grid; gap: 8px; }
+    .menu-list .btn { width: 100%; text-align: center; }
+    .hint { font-size: 0.72rem; color: var(--muted); margin-top: 16px; line-height: 1.7; font-weight: 300; }
+    #invoice-view h2 { margin-bottom: 4px; font-weight: 400; letter-spacing: 0.08em; }
+    #invoice-view .inv-meta { color: var(--muted); font-size: 0.85rem; margin-bottom: 16px; font-weight: 300; }
+    .chk {
+      display: flex; gap: 8px; align-items: flex-start;
+      font-size: 0.9rem; font-weight: 400; color: var(--ink);
+      letter-spacing: 0.04em;
+    }
+    .chk input { width: 20px; height: 20px; margin-top: 2px; flex: 0 0 20px; accent-color: var(--ink); }
+
+    @media (min-width: 700px) {
+      .backdrop { align-items: center; }
+      .sheet { border-radius: 0; max-height: 86vh; border: 1px solid var(--line); }
+      .cell { min-height: 96px; }
+      .cell .num, .cell button.num { font-size: 2.15rem; }
+      .num-pair .num, .num-pair button.num { font-size: 1.25rem; }
+      .month-num { font-size: 3.2rem; }
+      .month-name { font-size: 1.6rem; }
+      .chip { font-size: 9px; }
+    }
+    @media print {
+      @page { size: A4; margin: 16mm; }
+      body { background: #fff !important; color: #111 !important; }
+      body.printing .app,
+      body.printing .grab,
+      body.printing .no-print { display: none !important; }
+      body.printing .backdrop {
+        display: block !important;
+        position: static;
+        background: none;
+      }
+      body.printing .sheet {
+        box-shadow: none;
+        max-height: none;
+        border-radius: 0;
+        border: 0;
+        padding: 0;
+        overflow: visible;
+        width: 100%;
+        max-width: none;
+      }
+      table { font-size: 11px; }
+      th, td { border-bottom: 1px solid #ddd; }
+      tfoot td { border-top: 1px solid #111; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app" id="app">
+    <header class="topbar no-print">
+      <div class="brand">
+        <h1>給与カレンダー <span class="en">CALENDAR</span></h1>
+        <div class="sub">西原やすあき　月ごとの出演料・請求管理</div>
+      </div>
+      <button type="button" class="icon-btn" data-action="open-menu" aria-label="設定とデータ">設定</button>
+    </header>
+
+    <div class="month-nav no-print">
+      <div class="nav-side">
+        <button type="button" class="nav-arrow" data-action="prev-month" aria-label="前の月">‹</button>
+      </div>
+      <div class="month-hero">
+        <div class="month-line">
+          <h2 id="month-label"><span class="month-num">11</span><span class="month-name">NOVEMBER</span></h2>
+          <span class="year-label" id="year-label">2026</span>
+        </div>
+        <div class="month-ja" id="month-ja">2026年11月</div>
+      </div>
+      <div class="nav-side">
+        <button type="button" class="nav-arrow" data-action="next-month" aria-label="次の月">›</button>
+        <button type="button" class="nav-today" data-action="go-today" id="today-btn">今日</button>
+      </div>
+    </div>
+
+    <div class="dow no-print" id="dow"></div>
+    <div class="cal no-print" id="cal" role="grid" aria-label="月間カレンダー"></div>
+    <div class="legend no-print" id="legend"></div>
+
+    <section class="card no-print" id="goal-card"></section>
+    <section class="card no-print" id="summary-card"></section>
+    <section class="card no-print" id="withhold-card"></section>
+    <section class="card no-print" id="breakdown-card"></section>
+
+    <div class="actions no-print">
+      <button type="button" class="btn" data-action="open-invoices">請求明細</button>
+      <button type="button" class="btn" data-action="open-payments">入金予定</button>
+    </div>
+  </div>
+
+  <div class="backdrop no-print" id="backdrop" hidden>
+    <div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title">
+      <div class="grab"></div>
+      <div class="sheet-head">
+        <h2 id="sheet-title"></h2>
+        <button type="button" class="icon-btn no-print" data-action="close-sheet" aria-label="閉じる">閉じる</button>
+      </div>
+      <div id="sheet-body"></div>
+    </div>
+  </div>
+
+  <input type="file" id="import-file" accept="application/json,.json" hidden>
+
+  <script>
+  (function () {
+    "use strict";
+
+    const STORAGE_KEY = "kyuyo-calendar-v1";
+    const WITHHOLD_RATE = 1021 / 10000;
+    const PALETTE = [
+      "#8C6A55", "#5F7468", "#6E6578", "#A0895C",
+      "#5C6D7C", "#7A5C50", "#6A734F", "#8A7A6B",
+      "#5E6E6A", "#7A5E6A", "#6B5E52", "#4F6A62",
+      "#8A6B5C", "#5A6570", "#7A6E58", "#6A5C4E"
+    ];
+    const WEEKDAYS = ["日", "月", "火", "水", "木", "金", "土"];
+    const WEEKDAYS_EN = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
+    const MONTHS_EN = ["JANUARY","FEBRUARY","MARCH","APRIL","MAY","JUNE","JULY","AUGUST","SEPTEMBER","OCTOBER","NOVEMBER","DECEMBER"];
+    const WEEKDAY_RGB = [
+      [[168, 196, 160], [16, 68, 42]],
+      [[255, 226, 130], [232, 140, 12]],
+      [[255, 186, 150], [226, 78, 42]],
+      [[255, 168, 164], [210, 22, 22]],
+      [[245, 176, 214], [196, 16, 120]],
+      [[214, 186, 236], [90, 34, 158]],
+      [[168, 198, 240], [20, 80, 190]]
+    ];
+    const STATUS = { unbilled: "未請求", billed: "請求済み", paid: "入金済み" };
+
+    const state = {
+      view: new Date(),
+      showWithholding: false,
+      weekStartsOn: 0,
+      defaultGoal: 0,
+      monthlyGoals: {},
+      clients: {},
+      entries: []
+    };
+
+    let editingId = null;
+    let dayDate = null;
+    let formDraft = null;
+    let colorTarget = null;
+    let invoiceClient = "";
+
+    function todayDate() {
+      const n = new Date();
+      return new Date(n.getFullYear(), n.getMonth(), n.getDate());
+    }
+    function ymd(d) {
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, "0");
+      const day = String(d.getDate()).padStart(2, "0");
+      return y + "-" + m + "-" + day;
+    }
+    function parseYmd(s) {
+      const p = String(s).split("-").map(Number);
+      return new Date(p[0], p[1] - 1, p[2]);
+    }
+    function ymKey(d) {
+      return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0");
+    }
+    function monthLabel(d) {
+      return d.getFullYear() + "年" + (d.getMonth() + 1) + "月";
+    }
+    function longDate(s) {
+      const d = parseYmd(s);
+      return d.getFullYear() + "年" + (d.getMonth() + 1) + "月" + d.getDate() + "日（" + WEEKDAYS[d.getDay()] + "）";
+    }
+    function uid() {
+      if (crypto.randomUUID) return crypto.randomUUID();
+      return "e" + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+    }
+    function parseMoney(v) {
+      if (typeof v === "number") return isFinite(v) ? v : 0;
+      return Number(String(v == null ? "" : v).replace(/[¥￥,\s，円]/g, "")) || 0;
+    }
+    function formatYen(n) {
+      return "¥" + Math.round(Number(n) || 0).toLocaleString("ja-JP");
+    }
+    function compactYen(n) {
+      n = Math.round(Number(n) || 0);
+      if (Math.abs(n) >= 10000) {
+        const v = n / 10000;
+        const s = (Math.round(v * 10) / 10).toFixed(1).replace(/\.0$/, "");
+        return s + "万";
+      }
+      return formatYen(n);
+    }
+    function computeMinutes(start, end, breakMin) {
+      if (!start || !end) return 0;
+      const a = String(start).split(":").map(Number);
+      const b = String(end).split(":").map(Number);
+      if (a.length < 2 || b.length < 2 || a.some(isNaN) || b.some(isNaN)) return 0;
+      let s = a[0] * 60 + a[1];
+      let e = b[0] * 60 + b[1];
+      if (e <= s) e += 24 * 60;
+      return Math.max(0, e - s - (Number(breakMin) || 0));
+    }
+    function crossesMidnight(start, end) {
+      if (!start || !end) return false;
+      const a = String(start).split(":").map(Number);
+      const b = String(end).split(":").map(Number);
+      return (b[0] * 60 + b[1]) <= (a[0] * 60 + a[1]);
+    }
+    function hoursLabel(min) {
+      min = Math.max(0, Math.round(Number(min) || 0));
+      const h = Math.floor(min / 60);
+      const m = min % 60;
+      if (m === 0) return h + "時間";
+      return h + "時間" + m + "分";
+    }
+    function workPay(e) {
+      const min = computeMinutes(e.start, e.end, e.breakMin);
+      if (e.calcType === "hourly") {
+        return Math.round((parseMoney(e.hourlyRate) || 0) * (min / 60));
+      }
+      return Math.round(parseMoney(e.dailyRate) || 0);
+    }
+    function entryTotal(e) {
+      return workPay(e) + parseMoney(e.transport) + parseMoney(e.expenses);
+    }
+    function withholdingOf(pay) {
+      return Math.floor((Number(pay) || 0) * WITHHOLD_RATE);
+    }
+    function textOn(hex) {
+      const c = String(hex || "").replace("#", "");
+      if (c.length < 6) return "#fffdf8";
+      const r = parseInt(c.slice(0, 2), 16);
+      const g = parseInt(c.slice(2, 4), 16);
+      const b = parseInt(c.slice(4, 6), 16);
+      const y = (r * 299 + g * 587 + b * 114) / 1000;
+      return y > 160 ? "#2a2118" : "#fffdf8";
+    }
+    function escapeHtml(s) {
+      return String(s == null ? "" : s)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+    function clientNames() {
+      const set = {};
+      Object.keys(state.clients).forEach(function (n) { set[n] = true; });
+      state.entries.forEach(function (e) { if (e.client) set[e.client] = true; });
+      return Object.keys(set).sort(function (a, b) { return a.localeCompare(b, "ja"); });
+    }
+    function usedColors() {
+      const used = {};
+      Object.keys(state.clients).forEach(function (n) {
+        const c = state.clients[n] && state.clients[n].color;
+        if (c) used[c.toLowerCase()] = true;
+      });
+      return used;
+    }
+    function autoColor() {
+      const used = usedColors();
+      for (let i = 0; i < PALETTE.length; i++) {
+        if (!used[PALETTE[i].toLowerCase()]) return PALETTE[i];
+      }
+      return PALETTE[Object.keys(used).length % PALETTE.length];
+    }
+    function ensureClient(name) {
+      name = String(name || "").trim();
+      if (!name) return "";
+      if (!state.clients[name]) {
+        state.clients[name] = { color: autoColor(), closeDay: "end", payMonthsLater: 1, payDay: "end" };
+      } else {
+        const c = state.clients[name];
+        if (!c.color) c.color = autoColor();
+        if (c.closeDay == null || c.closeDay === "") c.closeDay = "end";
+        if (c.payMonthsLater == null || c.payMonthsLater === "") c.payMonthsLater = 1;
+        if (c.payDay == null || c.payDay === "") c.payDay = "end";
+      }
+      return name;
+    }
+    function clientColor(name) {
+      if (name && state.clients[name] && state.clients[name].color) return state.clients[name].color;
+      return "#8a7a68";
+    }
+    function getGoal(key) {
+      if (Object.prototype.hasOwnProperty.call(state.monthlyGoals, key)) {
+        return parseMoney(state.monthlyGoals[key]) || 0;
+      }
+      return parseMoney(state.defaultGoal) || 0;
+    }
+    function hasMonthOverride(key) {
+      return Object.prototype.hasOwnProperty.call(state.monthlyGoals, key);
+    }
+    function remainingDays(view) {
+      const now = todayDate();
+      const y = view.getFullYear();
+      const m = view.getMonth();
+      const last = new Date(y, m + 1, 0).getDate();
+      if (y < now.getFullYear() || (y === now.getFullYear() && m < now.getMonth())) return 0;
+      if (y === now.getFullYear() && m === now.getMonth()) return last - now.getDate() + 1;
+      return last;
+    }
+    function monthEntries(view) {
+      const start = ymd(new Date(view.getFullYear(), view.getMonth(), 1));
+      const end = ymd(new Date(view.getFullYear(), view.getMonth() + 1, 0));
+      return state.entries.filter(function (e) { return e.date >= start && e.date <= end; })
+        .sort(function (a, b) {
+          if (a.date !== b.date) return a.date < b.date ? -1 : 1;
+          return (a.start || "").localeCompare(b.start || "");
+        });
+    }
+    function entriesOn(dateStr) {
+      return state.entries.filter(function (e) { return e.date === dateStr; })
+        .sort(function (a, b) { return (a.start || "").localeCompare(b.start || ""); });
+    }
+    function lastEntryForClient(name) {
+      const list = state.entries.filter(function (e) { return e.client === name; })
+        .sort(function (a, b) { return a.date < b.date ? 1 : a.date > b.date ? -1 : 0; });
+      return list[0] || null;
+    }
+    function projectNamesForClient(name) {
+      const set = {};
+      state.entries.forEach(function (e) {
+        if (e.client === name && e.project) set[e.project] = true;
+      });
+      return Object.keys(set).sort(function (a, b) { return a.localeCompare(b, "ja"); });
+    }
+    function lastDayOfMonth(y, m) {
+      return new Date(y, m + 1, 0).getDate();
+    }
+    function closingDayInMonth(y, m, closeDay) {
+      const last = lastDayOfMonth(y, m);
+      if (closeDay === "end" || closeDay == null || closeDay === "") return last;
+      const d = Number(closeDay);
+      if (!isFinite(d) || d <= 0) return last;
+      return Math.min(Math.max(1, Math.round(d)), last);
+    }
+    function clientTerms(name) {
+      if (name) ensureClient(name);
+      const c = (name && state.clients[name]) || {};
+      const closeDay = (c.closeDay == null || c.closeDay === "" || c.closeDay === "end") ? "end" : Number(c.closeDay);
+      const payMonthsLater = c.payMonthsLater == null || c.payMonthsLater === "" ? 1 : Number(c.payMonthsLater);
+      const payDay = (c.payDay == null || c.payDay === "" || c.payDay === "end") ? "end" : Number(c.payDay);
+      return { closeDay: closeDay, payMonthsLater: isFinite(payMonthsLater) ? payMonthsLater : 1, payDay: payDay };
+    }
+    function closingDateForWork(workYmd, closeDay) {
+      const d = typeof workYmd === "string" ? parseYmd(workYmd) : workYmd;
+      const y = d.getFullYear(), m = d.getMonth(), day = d.getDate();
+      const closeThis = closingDayInMonth(y, m, closeDay);
+      if (day <= closeThis) return new Date(y, m, closeThis);
+      const m2 = m + 1;
+      const y2 = y + Math.floor(m2 / 12);
+      const mm = ((m2 % 12) + 12) % 12;
+      return new Date(y2, mm, closingDayInMonth(y2, mm, closeDay));
+    }
+    function addMonths(y, m, add) {
+      const n = m + (Number(add) || 0);
+      const yy = y + Math.floor(n / 12);
+      const mm = ((n % 12) + 12) % 12;
+      return { y: yy, m: mm };
+    }
+    function computePaymentDate(workYmd, terms) {
+      terms = terms || {};
+      const close = closingDateForWork(workYmd, terms.closeDay);
+      const later = addMonths(close.getFullYear(), close.getMonth(), terms.payMonthsLater);
+      const last = lastDayOfMonth(later.y, later.m);
+      const day = (terms.payDay === "end" || terms.payDay == null || terms.payDay === "") ? last : Math.min(Math.max(1, Math.round(Number(terms.payDay) || 1)), last);
+      return new Date(later.y, later.m, day);
+    }
+    function paymentDateYmd(workYmd, terms) {
+      return ymd(computePaymentDate(workYmd, terms));
+    }
+    function entryPaymentYmd(e) {
+      return paymentDateYmd(e.date, clientTerms(e.client));
+    }
+    function entryClosingYmd(e) {
+      return ymd(closingDateForWork(e.date, clientTerms(e.client).closeDay));
+    }
+    function periodStartDate(closeDate, closeDay) {
+      const c = typeof closeDate === "string" ? parseYmd(closeDate) : closeDate;
+      const prev = addMonths(c.getFullYear(), c.getMonth(), -1);
+      const prevClose = new Date(prev.y, prev.m, closingDayInMonth(prev.y, prev.m, closeDay));
+      const start = new Date(prevClose);
+      start.setDate(start.getDate() + 1);
+      return start;
+    }
+    function shortDate(d) {
+      if (typeof d === "string") d = parseYmd(d);
+      return (d.getMonth() + 1) + "/" + d.getDate();
+    }
+    function periodLabel(closeDate, closeDay) {
+      const close = typeof closeDate === "string" ? parseYmd(closeDate) : closeDate;
+      const start = periodStartDate(close, closeDay);
+      return shortDate(start) + "〜" + shortDate(close) + "締め";
+    }
+    function closePresetLabel(closeDay) {
+      if (closeDay === "end" || closeDay == null || closeDay === "") return "末締め";
+      return Number(closeDay) + "日締め";
+    }
+    function payPresetLabel(terms) {
+      const m = Number(terms.payMonthsLater);
+      const d = terms.payDay;
+      const monthWord = m === 1 ? "翌月" : m === 2 ? "翌々月" : "締めの" + m + "ヶ月後の";
+      const dayWord = (d === "end" || d == null || d === "") ? "末" : (Number(d) + "日");
+      if (m === 1 && (d === 5 || d === "5")) return "翌月5日払い";
+      if (m === 1 && d === "end") return "翌月末払い";
+      if (m === 2 && (d === 5 || d === "5")) return "翌々月5日";
+      if (m === 2 && d === "end") return "翌々月末払い";
+      if (m === 1) return "翌月" + dayWord;
+      if (m === 2) return "翌々月" + dayWord;
+      return monthWord + dayWord;
+    }
+    function termsLabel(name) {
+      const t = clientTerms(name);
+      return closePresetLabel(t.closeDay) + "・" + payPresetLabel(t);
+    }
+    function entryNet(e) {
+      const pay = workPay(e);
+      const extra = parseMoney(e.transport) + parseMoney(e.expenses);
+      if (state.showWithholding) return pay - withholdingOf(pay) + extra;
+      return pay + extra;
+    }
+    function paymentGroups(filterFn) {
+      const map = {};
+      state.entries.forEach(function (e) {
+        if (!e.client) return;
+        const terms = clientTerms(e.client);
+        const closeYmd = ymd(closingDateForWork(e.date, terms.closeDay));
+        const payYmd = paymentDateYmd(e.date, terms);
+        const rec = { client: e.client, closeYmd: closeYmd, payYmd: payYmd, terms: terms, entries: e };
+        if (filterFn && !filterFn(rec, e)) return;
+        const key = e.client + "|" + closeYmd + "|" + payYmd;
+        if (!map[key]) {
+          map[key] = {
+            key: key,
+            client: e.client,
+            closeYmd: closeYmd,
+            payYmd: payYmd,
+            terms: terms,
+            period: periodLabel(closeYmd, terms.closeDay),
+            entries: [],
+            pay: 0, transport: 0, expenses: 0, total: 0, net: 0
+          };
+        }
+        const g = map[key];
+        g.entries.push(e);
+        g.pay += workPay(e);
+        g.transport += parseMoney(e.transport);
+        g.expenses += parseMoney(e.expenses);
+        g.total += entryTotal(e);
+        g.net += entryNet(e);
+      });
+      return Object.keys(map).map(function (k) {
+        const g = map[k];
+        g.allPaid = g.entries.every(function (e) { return e.status === "paid"; });
+        g.somePaid = g.entries.some(function (e) { return e.status === "paid"; });
+        g.amount = state.showWithholding ? g.net : g.total;
+        return g;
+      }).sort(function (a, b) {
+        if (a.payYmd !== b.payYmd) return a.payYmd < b.payYmd ? -1 : 1;
+        return a.client.localeCompare(b.client, "ja");
+      });
+    }
+    function paymentMarksOn(ds) {
+      const seen = {};
+      const list = [];
+      state.entries.forEach(function (e) {
+        if (!e.client) return;
+        if (entryPaymentYmd(e) !== ds) return;
+        if (seen[e.client]) {
+          if (e.status !== "paid") seen[e.client].paid = false;
+          return;
+        }
+        const rec = { client: e.client, color: clientColor(e.client), paid: e.status === "paid" };
+        seen[e.client] = rec;
+        list.push(rec);
+      });
+      return list;
+    }
+    function setGroupStatus(key, status) {
+      const parts = String(key || "").split("|");
+      if (parts.length < 3) return;
+      const client = parts[0], closeYmd = parts[1], payYmd = parts[2];
+      state.entries.forEach(function (e) {
+        if (e.client === client && entryClosingYmd(e) === closeYmd && entryPaymentYmd(e) === payYmd) {
+          e.status = status;
+        }
+      });
+    }
+    function truncateText(s, n) {
+      s = String(s || "");
+      if (s.length <= n) return s;
+      return s.slice(0, n);
+    }
+
+    function load() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return;
+        applyData(JSON.parse(raw));
+      } catch (err) {
+        console.warn("load failed", err);
+      }
+    }
+    function applyData(data) {
+      if (!data || typeof data !== "object") throw new Error("invalid");
+      state.weekStartsOn = data.weekStartsOn === 1 ? 1 : 0;
+      state.defaultGoal = parseMoney(data.defaultGoal) || 0;
+      state.monthlyGoals = data.monthlyGoals && typeof data.monthlyGoals === "object" ? Object.assign({}, data.monthlyGoals) : {};
+      state.clients = data.clients && typeof data.clients === "object" ? JSON.parse(JSON.stringify(data.clients)) : {};
+      state.entries = Array.isArray(data.entries) ? data.entries.map(function (e) {
+        const x = Object.assign({}, e);
+        if (!Object.prototype.hasOwnProperty.call(e, "project")) {
+          x.project = e.memo || "";
+          x.memo = "";
+        } else {
+          x.project = e.project || "";
+          x.memo = e.memo || "";
+        }
+        return x;
+      }) : [];
+      if (typeof data.showWithholding === "boolean") state.showWithholding = data.showWithholding;
+      state.entries.forEach(function (e) { if (e.client) ensureClient(e.client); });
+      Object.keys(state.clients).forEach(function (n) { ensureClient(n); });
+    }
+    function persist() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({
+        version: 1,
+        weekStartsOn: state.weekStartsOn,
+        defaultGoal: state.defaultGoal,
+        monthlyGoals: state.monthlyGoals,
+        clients: state.clients,
+        entries: state.entries,
+        showWithholding: state.showWithholding
+      }));
+    }
+    function exportPayload() {
+      return {
+        version: 1,
+        exportedAt: new Date().toISOString(),
+        weekStartsOn: state.weekStartsOn,
+        defaultGoal: state.defaultGoal,
+        monthlyGoals: state.monthlyGoals,
+        clients: state.clients,
+        entries: state.entries,
+        showWithholding: state.showWithholding
+      };
+    }
+    function summarize(list) {
+      const days = {};
+      let minutes = 0, pay = 0, transport = 0, expenses = 0;
+      const byClient = {};
+      list.forEach(function (e) {
+        days[e.date] = true;
+        const min = computeMinutes(e.start, e.end, e.breakMin);
+        minutes += min;
+        const p = workPay(e);
+        const t = parseMoney(e.transport);
+        const x = parseMoney(e.expenses);
+        pay += p; transport += t; expenses += x;
+        const name = e.client || "（未設定）";
+        if (!byClient[name]) byClient[name] = { name: name, days: {}, minutes: 0, pay: 0, transport: 0, expenses: 0, entries: [], byProject: {} };
+        byClient[name].days[e.date] = true;
+        byClient[name].minutes += min;
+        byClient[name].pay += p;
+        byClient[name].transport += t;
+        byClient[name].expenses += x;
+        byClient[name].entries.push(e);
+        const pj = e.project ? e.project : "（案件名なし）";
+        if (!byClient[name].byProject[pj]) byClient[name].byProject[pj] = { name: pj, days: {}, minutes: 0, pay: 0, transport: 0, expenses: 0, entries: [] };
+        const pr = byClient[name].byProject[pj];
+        pr.days[e.date] = true;
+        pr.minutes += min;
+        pr.pay += p;
+        pr.transport += t;
+        pr.expenses += x;
+        pr.entries.push(e);
+      });
+      const clients = Object.keys(byClient).sort(function (a, b) { return a.localeCompare(b, "ja"); })
+        .map(function (k) {
+          const c = byClient[k];
+          c.dayCount = Object.keys(c.days).length;
+          c.total = c.pay + c.transport + c.expenses;
+          c.projects = Object.keys(c.byProject || {}).sort(function (a, b) { return a.localeCompare(b, "ja"); }).map(function (pk) {
+            const pr = c.byProject[pk];
+            pr.dayCount = Object.keys(pr.days).length;
+            pr.total = pr.pay + pr.transport + pr.expenses;
+            return pr;
+          });
+          return c;
+        });
+      return {
+        dayCount: Object.keys(days).length,
+        minutes: minutes,
+        pay: pay,
+        transport: transport,
+        expenses: expenses,
+        total: pay + transport + expenses,
+        clients: clients
+      };
+    }
+
+    function lerp(a, b, t) { return Math.round(a + (b - a) * t); }
+    function weekdayColor(dow, weekIndex, weekCount) {
+      const pair = WEEKDAY_RGB[((dow % 7) + 7) % 7];
+      const t = weekCount <= 1 ? 1 : Math.max(0, Math.min(1, weekIndex / (weekCount - 1)));
+      const e = Math.pow(t, 0.85);
+      return "rgb(" + lerp(pair[0][0], pair[1][0], e) + "," + lerp(pair[0][1], pair[1][1], e) + "," + lerp(pair[0][2], pair[1][2], e) + ")";
+    }
+    function rgbChannel(color, i) {
+      const m = String(color).match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/);
+      return m ? Number(m[i + 1]) : 0;
+    }
+    function monthCells(view) {
+      const start = state.weekStartsOn;
+      const y = view.getFullYear(), m = view.getMonth();
+      const lastDate = new Date(y, m + 1, 0).getDate();
+      const lead = (new Date(y, m, 1).getDay() - start + 7) % 7;
+      const rawRows = Math.ceil((lead + lastDate) / 7);
+      const grid = [];
+      for (let r = 0; r < rawRows; r++) {
+        const row = [];
+        for (let c = 0; c < 7; c++) {
+          const n = r * 7 + c - lead + 1;
+          const dow = (start + c) % 7;
+          if (n < 1 || n > lastDate) row.push({ empty: true, dow: dow, weekIndex: r });
+          else row.push({ empty: false, day: n, day2: null, dow: dow, weekIndex: r, weekIndex2: r });
+        }
+        grid.push(row);
+      }
+      if (rawRows === 6) {
+        const last = grid[5];
+        const fifth = grid[4];
+        for (let c = 0; c < 7; c++) {
+          if (!last[c].empty) {
+            fifth[c].day2 = last[c].day;
+            fifth[c].weekIndex2 = last[c].weekIndex;
+          }
+        }
+        grid.pop();
+      }
+      return { rows: grid, weekCount: rawRows, lead: lead };
+    }
+    function renderMonthHeader(view) {
+      const m = view.getMonth();
+      const y = view.getFullYear();
+      document.getElementById("month-label").innerHTML =
+        '<span class="month-num">' + (m + 1) + '</span><span class="month-name">' + MONTHS_EN[m] + "</span>";
+      document.getElementById("year-label").textContent = String(y);
+      document.getElementById("month-ja").textContent = y + "年" + (m + 1) + "月";
+    }
+
+    function render() {
+      const view = new Date(state.view.getFullYear(), state.view.getMonth(), 1);
+      renderMonthHeader(view);
+      const now = todayDate();
+      const isThisMonth = view.getFullYear() === now.getFullYear() && view.getMonth() === now.getMonth();
+      document.getElementById("today-btn").hidden = isThisMonth;
+      renderDow();
+      renderCalendar(view, now);
+      const sum = summarize(monthEntries(view));
+      renderLegend(sum);
+      renderGoal(view, sum);
+      renderSummary(sum);
+      renderWithhold(sum);
+      renderBreakdown(sum);
+    }
+
+    function renderDow() {
+      const start = state.weekStartsOn;
+      const html = [];
+      for (let i = 0; i < 7; i++) {
+        const d = (start + i) % 7;
+        const color = weekdayColor(d, 3, 5);
+        html.push('<span class="dow-cell" style="color:' + color + '"><span class="dow-en">' + WEEKDAYS_EN[d] + '</span><span class="dow-ja">' + WEEKDAYS[d] + "</span></span>");
+      }
+      document.getElementById("dow").innerHTML = html.join("");
+    }
+
+    function monthGrid(view) {
+      return monthCells(view).rows.reduce(function (acc, row) {
+        return acc.concat(row.filter(function (c) { return !c.empty; }).map(function (c) {
+          return new Date(view.getFullYear(), view.getMonth(), c.day);
+        }));
+      }, []);
+    }
+
+    function entryChipsHtml(dateStr, max) {
+      max = max || 2;
+      const items = entriesOn(dateStr);
+      const chips = items.slice(0, max).map(function (e) {
+        const color = clientColor(e.client);
+        const amt = compactYen(entryTotal(e));
+        const paid = e.status === "paid" ? " paid" : "";
+        const pj = (e.project || "").trim();
+        const title = pj ? truncateText(pj, 5) : ((e.client || "").slice(0, 2));
+        const inner = pj
+          ? '<span class="pj">' + escapeHtml(title) + "</span>" + escapeHtml(amt)
+          : escapeHtml(title ? title + " " + amt : amt);
+        return '<span class="chip' + paid + '" style="--c:' + color + '">' + inner + "</span>";
+      }).join("");
+      const more = items.length > max ? '<span class="more">+' + (items.length - max) + "</span>" : "";
+      const marks = paymentMarksOn(dateStr).map(function (m) {
+        return '<span class="pay-yen' + (m.paid ? " paid" : "") + '" style="color:' + m.color + '" title="' + escapeHtml(m.client + " 入金予定") + '">¥</span>';
+      }).join("");
+      const markRow = marks ? '<span class="pay-marks">' + marks + "</span>" : "";
+      return chips + more + markRow;
+    }
+
+    function renderCalendar(view, now) {
+      const today = ymd(now);
+      const packed = monthCells(view);
+      const y = view.getFullYear(), m = view.getMonth();
+      const html = packed.rows.map(function (row) {
+        return row.map(function (cell) {
+          if (cell.empty) return '<div class="cell empty"></div>';
+          const ds = ymd(new Date(y, m, cell.day));
+          const color = weekdayColor(cell.dow, cell.weekIndex, packed.weekCount);
+          const isToday = ds === today;
+          if (cell.day2) {
+            const ds2 = ymd(new Date(y, m, cell.day2));
+            const color2 = weekdayColor(cell.dow, cell.weekIndex2, packed.weekCount);
+            const today1 = ds === today;
+            const today2 = ds2 === today;
+            return '<div class="cell' + (today1 || today2 ? " today" : "") + '">' +
+              '<div class="num-pair">' +
+              '<button type="button" class="num" style="color:' + color + '" data-action="open-day" data-date="' + ds + '" aria-label="' + longDate(ds) + '">' + cell.day + "</button>" +
+              '<span class="date-slash" style="color:' + color2 + '">/</span>' +
+              '<button type="button" class="num" style="color:' + color2 + '" data-action="open-day" data-date="' + ds2 + '" aria-label="' + longDate(ds2) + '">' + cell.day2 + "</button></div>" +
+              ((today1 || today2) ? '<span class="today-dot" style="color:' + (today2 ? color2 : color) + '"></span>' : "") +
+              '<div class="pair-entries"><div>' + entryChipsHtml(ds, 1) + "</div><div>" + entryChipsHtml(ds2, 1) + "</div></div></div>";
+          }
+          const cls = ["cell"];
+          if (isToday) cls.push("today");
+          return '<button type="button" class="' + cls.join(" ") + '" data-action="open-day" data-date="' + ds + '" aria-label="' + longDate(ds) + '">' +
+            '<span class="num-block" style="color:' + color + '"><span class="num">' + cell.day + "</span>" +
+            (isToday ? '<span class="today-dot"></span>' : "") + "</span>" +
+            entryChipsHtml(ds, 2) + "</button>";
+        }).join("");
+      }).join("");
+      document.getElementById("cal").innerHTML = html;
+    }
+
+    function renderLegend(sum) {
+      const el = document.getElementById("legend");
+      if (!sum.clients.length) { el.innerHTML = ""; return; }
+      el.innerHTML = sum.clients.map(function (c) {
+        return '<span class="legend-item"><i class="swatch" style="background:' + clientColor(c.name) + '"></i>' + escapeHtml(c.name) + "</span>";
+      }).join("");
+    }
+
+    function renderGoal(view, sum) {
+      const el = document.getElementById("goal-card");
+      const key = ymKey(view);
+      const goal = getGoal(key);
+      const current = sum.pay;
+      if (!goal) {
+        el.innerHTML = '<div class="goal-head"><h3>目標稼ぎ額 <span class="en">GOAL</span></h3><button type="button" class="btn" style="min-height:40px" data-action="edit-goal">設定する</button></div>' +
+          '<p class="goal-empty">この月の目標額はまだありません。標準の目標を設定すると、先の月にも引き継がれます。</p>';
+        return;
+      }
+      const rate = current / goal * 100;
+      const remain = Math.max(0, goal - current);
+      const days = remainingDays(view);
+      const perDay = days > 0 && remain > 0 ? Math.ceil(remain / days) : 0;
+      const done = current >= goal;
+      let foot = done ? "<span><strong>目標達成</strong></span>" : "<span>残り <strong>" + formatYen(remain) + "</strong></span>";
+      if (!done && days > 0) foot += "<span>残り" + days + "日で 1日あたり <strong>" + formatYen(perDay) + "</strong></span>";
+      else if (!done) foot += "<span>今月は終了しています</span>";
+      el.innerHTML =
+        '<div class="goal-head"><h3>目標稼ぎ額' + (hasMonthOverride(key) ? "（この月）" : "（標準）") + ' <span class="en">GOAL</span></h3>' +
+        '<button type="button" class="btn" style="min-height:40px" data-action="edit-goal">変更</button></div>' +
+        '<div class="goal-amounts"><div><div class="stat-lbl" style="font-size:0.7rem;color:var(--muted)">現在の合計（報酬）</div>' +
+        '<div class="now">' + formatYen(current) + "</div></div>" +
+        '<div class="meta">目標 ' + formatYen(goal) + "<br>達成率 <strong style='color:var(--ink)'>" + (Math.round(rate * 10) / 10) + "%</strong></div></div>" +
+        '<div class="bar' + (done ? " done" : "") + '"><i style="width:' + Math.min(100, rate) + '%"></i></div>' +
+        '<div class="goal-foot">' + foot + "</div>" +
+        '<p class="note">達成率は報酬（日給・時給）で計算し、交通費・経費は含めません。</p>';
+    }
+
+    function renderSummary(sum) {
+      document.getElementById("summary-card").innerHTML =
+        "<h3>今月の合計 <span class='en'>SUMMARY</span></h3><div class='stats'>" +
+        "<div class='stat'><div class='lbl'>勤務日数</div><div class='val'>" + sum.dayCount + "日</div></div>" +
+        "<div class='stat'><div class='lbl'>合計時間</div><div class='val'>" + hoursLabel(sum.minutes) + "</div></div>" +
+        "<div class='stat'><div class='lbl'>合計金額</div><div class='val'>" + formatYen(sum.total) + "</div></div></div>";
+    }
+
+    function renderWithhold(sum) {
+      const on = state.showWithholding;
+      const tax = withholdingOf(sum.pay);
+      const net = sum.pay - tax + sum.transport + sum.expenses;
+      let extra = "";
+      if (on) {
+        extra = "<div class='withhold-lines'>" +
+          "<div><span>報酬合計</span><span>" + formatYen(sum.pay) + "</span></div>" +
+          "<div><span>源泉徴収額（10.21%）</span><span>" + formatYen(tax) + "</span></div>" +
+          "<div><span>交通費・経費</span><span>" + formatYen(sum.transport + sum.expenses) + "</span></div>" +
+          "<div><span>差引支払額</span><strong>" + formatYen(net) + "</strong></div></div>" +
+          "<p class='note'>源泉徴収は報酬のみ（交通費・経費を除く）に10.21%を掛け、円未満は切り捨てています。実際の税額は契約内容により異なります。</p>";
+      }
+      document.getElementById("withhold-card").innerHTML =
+        "<div class='toggle-row'><h3 style='margin:0'>源泉徴収 10.21% <span class='en'>TAX</span></h3>" +
+        "<label class='switch'><input type='checkbox' id='withhold-toggle'" + (on ? " checked" : "") + "></label></div>" + extra;
+    }
+
+    function renderBreakdown(sum) {
+      let body;
+      if (!sum.clients.length) {
+        body = "<p class='empty'>この月の記録はまだありません。日付をタップして追加できます。</p>";
+      } else {
+        body = "<div class='table-wrap'><table><thead><tr>" +
+          "<th class='left'>請求先</th><th>日数</th><th>時間</th><th>報酬</th><th>交通費</th><th>経費</th><th>合計</th>" +
+          "</tr></thead><tbody>" +
+          sum.clients.map(function (c) {
+            const main = "<tr><td class='left'><span class='client-cell'><i class='swatch' style='background:" + clientColor(c.name) + "'></i>" + escapeHtml(c.name) + "</span></td>" +
+              "<td>" + c.dayCount + "</td><td>" + hoursLabel(c.minutes) + "</td><td>" + formatYen(c.pay) + "</td>" +
+              "<td>" + formatYen(c.transport) + "</td><td>" + formatYen(c.expenses) + "</td><td>" + formatYen(c.total) + "</td></tr>";
+            const subs = (c.projects && c.projects.length) ? c.projects.map(function (pr) {
+              return "<tr class='sub-row'><td class='left'>" + escapeHtml(pr.name) + "</td>" +
+                "<td>" + pr.dayCount + "</td><td>" + hoursLabel(pr.minutes) + "</td><td>" + formatYen(pr.pay) + "</td>" +
+                "<td>" + formatYen(pr.transport) + "</td><td>" + formatYen(pr.expenses) + "</td><td>" + formatYen(pr.total) + "</td></tr>";
+            }).join("") : "";
+            return main + subs;
+          }).join("") +
+          "</tbody><tfoot><tr><td class='left'>合計</td><td>" + sum.dayCount + "</td><td>" + hoursLabel(sum.minutes) + "</td>" +
+          "<td>" + formatYen(sum.pay) + "</td><td>" + formatYen(sum.transport) + "</td><td>" + formatYen(sum.expenses) + "</td><td>" + formatYen(sum.total) + "</td></tr></tfoot></table></div>";
+      }
+      document.getElementById("breakdown-card").innerHTML = "<h3>請求先ごとの内訳 <span class='en'>BREAKDOWN</span></h3>" + body;
+    }
+
+    function openSheet(title, html) {
+      document.getElementById("sheet-title").textContent = title;
+      document.getElementById("sheet-body").innerHTML = html;
+      document.getElementById("backdrop").hidden = false;
+      document.body.style.overflow = "hidden";
+    }
+    function closeSheet() {
+      if (document.body.classList.contains("printing")) return;
+      editingId = null;
+      dayDate = null;
+      formDraft = null;
+      colorTarget = null;
+      invoiceClient = "";
+      document.getElementById("backdrop").hidden = true;
+      document.getElementById("sheet-body").innerHTML = "";
+      document.body.style.overflow = "";
+    }
+
+    function datalistHtml(client) {
+      return '<datalist id="client-list">' + clientNames().map(function (n) {
+        return '<option value="' + escapeHtml(n) + '"></option>';
+      }).join("") + "</datalist>" +
+        '<datalist id="project-list">' + projectNamesForClient(client || "").map(function (n) {
+          return '<option value="' + escapeHtml(n) + '"></option>';
+        }).join("") + "</datalist>";
+    }
+    function refreshProjectList() {
+      const input = document.querySelector('#entry-form [name="client"]');
+      const list = document.getElementById("project-list");
+      if (!list) return;
+      const name = input ? input.value.trim() : ((formDraft && formDraft.client) || "");
+      list.innerHTML = projectNamesForClient(name).map(function (n) {
+        return '<option value="' + escapeHtml(n) + '"></option>';
+      }).join("");
+    }
+
+    function openDay(dateStr) {
+      dayDate = dateStr;
+      editingId = null;
+      const items = entriesOn(dateStr);
+      let html = items.length ? items.map(function (e) {
+        const time = (e.start && e.end)
+          ? (e.start + "–" + e.end + "（" + hoursLabel(computeMinutes(e.start, e.end, e.breakMin)) + "）")
+          : hoursLabel(computeMinutes(e.start, e.end, e.breakMin));
+        return '<button type="button" class="entry-card" style="--c:' + clientColor(e.client) + '" data-action="edit-entry" data-id="' + e.id + '">' +
+          '<div class="t">' + escapeHtml(e.client || "（未設定）") + "　" + formatYen(entryTotal(e)) + "</div>" +
+          '<div class="s">' + escapeHtml(e.project ? e.project + " / " : "") + (e.calcType === "hourly" ? "時給" : "日給") + "　" + time +
+          (e.memo ? "　" + escapeHtml(e.memo) : "") +
+          "　入金予定 " + entryPaymentYmd(e).replace(/-/g, "/") +
+          "　<span class='badge " + e.status + "'>" + (STATUS[e.status] || "") + "</span></div></button>";
+      }).join("") : "<p class='empty'>この日の仕事はまだありません。</p>";
+      html += '<button type="button" class="btn primary" style="width:100%;margin-top:8px" data-action="new-entry">＋ 仕事を追加</button>';
+      openSheet(longDate(dateStr), html);
+    }
+
+    function blankEntry(dateStr) {
+      return {
+        id: null, date: dateStr, client: "", project: "", memo: "",
+        calcType: "daily", dailyRate: "", hourlyRate: "",
+        start: "09:00", end: "18:00", breakMin: 60,
+        transport: "", expenses: "", status: "unbilled"
+      };
+    }
+
+    function valAttr(v) {
+      if (v === 0 || v === "0") return "0";
+      return escapeHtml(v == null || v === "" ? "" : v);
+    }
+
+    function openEntryForm(entry) {
+      formDraft = Object.assign({}, entry);
+      editingId = entry.id;
+      const e = formDraft;
+      const min = computeMinutes(e.start, e.end, e.breakMin);
+      const html = datalistHtml(e.client) + '<form class="form-grid" id="entry-form">' +
+        '<label class="fld">請求先<input name="client" list="client-list" required placeholder="例：関西テレビ" value="' + escapeHtml(e.client) + '" autocomplete="off"></label>' +
+        '<label class="fld">案件名（任意）<input name="project" list="project-list" placeholder="番組名・舞台名など" value="' + escapeHtml(e.project || "") + '" autocomplete="off"></label>' +
+        '<label class="fld">メモ（任意）<input name="memo" placeholder="現場のメモなど" value="' + escapeHtml(e.memo || "") + '"></label>' +
+        '<div><div class="fld" style="margin-bottom:6px">計算方法</div><div class="seg" id="calc-seg">' +
+        '<button type="button" data-action="set-calc" data-v="daily" class="' + (e.calcType !== "hourly" ? "on" : "") + '">日給</button>' +
+        '<button type="button" data-action="set-calc" data-v="hourly" class="' + (e.calcType === "hourly" ? "on" : "") + '">時給</button></div></div>' +
+        '<label class="fld" id="rate-daily"' + (e.calcType === "hourly" ? " hidden" : "") + '>日給額<input name="dailyRate" inputmode="numeric" placeholder="例：40000" value="' + valAttr(e.dailyRate) + '"></label>' +
+        '<label class="fld" id="rate-hourly"' + (e.calcType === "hourly" ? "" : " hidden") + '>時給額<input name="hourlyRate" inputmode="numeric" placeholder="例：5000" value="' + valAttr(e.hourlyRate) + '"></label>' +
+        '<div class="row2"><label class="fld">開始時刻<input type="time" name="start" value="' + escapeHtml(e.start || "") + '"></label>' +
+        '<label class="fld">終了時刻<input type="time" name="end" value="' + escapeHtml(e.end || "") + '"></label></div>' +
+        '<label class="fld">休憩（分）<input name="breakMin" inputmode="numeric" value="' + valAttr(e.breakMin) + '"></label>' +
+        '<div class="live" id="live-hours"><div><span>勤務時間</span><strong>' + hoursLabel(min) + "</strong></div>" +
+        (crossesMidnight(e.start, e.end) ? "<div class='midnight'>終了が開始と同じか前の時刻のため、翌日終了として計算しています。</div>" : "") + "</div>" +
+        '<div class="row2"><label class="fld">交通費（任意）<input name="transport" inputmode="numeric" placeholder="0" value="' + valAttr(e.transport) + '"></label>' +
+        '<label class="fld">経費（任意）<input name="expenses" inputmode="numeric" placeholder="0" value="' + valAttr(e.expenses) + '"></label></div>' +
+        '<div><div class="fld" style="margin-bottom:6px">状態</div><div class="seg three" id="status-seg">' +
+        '<button type="button" data-action="set-status" data-v="unbilled" class="' + (e.status === "unbilled" ? "on" : "") + '">未請求</button>' +
+        '<button type="button" data-action="set-status" data-v="billed" class="' + (e.status === "billed" ? "on" : "") + '">請求済み</button>' +
+        '<button type="button" data-action="set-status" data-v="paid" class="' + (e.status === "paid" ? "on" : "") + '">入金済み</button></div></div>' +
+        '<div class="live" id="live-total"><div><span>報酬</span><strong>' + formatYen(workPay(e)) + "</strong></div>" +
+        "<div><span>合計（交通費・経費込）</span><strong>" + formatYen(entryTotal(e)) + "</strong></div></div>" +
+        '<div class="actions" style="margin-top:4px">' +
+        (e.id ? '<button type="button" class="btn danger" data-action="delete-entry">削除</button>' : '<button type="button" class="btn ghost" data-action="back-day">戻る</button>') +
+        '<button type="submit" class="btn primary">保存</button></div></form>';
+      openSheet(e.id ? "仕事を編集" : "仕事を追加", html);
+    }
+
+    function readForm() {
+      const form = document.getElementById("entry-form");
+      if (!form) return formDraft;
+      const f = new FormData(form);
+      formDraft.client = String(f.get("client") || "").trim();
+      formDraft.project = String(f.get("project") || "").trim();
+      formDraft.memo = String(f.get("memo") || "").trim();
+      formDraft.dailyRate = parseMoney(f.get("dailyRate"));
+      formDraft.hourlyRate = parseMoney(f.get("hourlyRate"));
+      formDraft.start = String(f.get("start") || "");
+      formDraft.end = String(f.get("end") || "");
+      formDraft.breakMin = parseMoney(f.get("breakMin"));
+      formDraft.transport = parseMoney(f.get("transport"));
+      formDraft.expenses = parseMoney(f.get("expenses"));
+      return formDraft;
+    }
+    function refreshLive() {
+      const e = readForm();
+      const hours = document.getElementById("live-hours");
+      const total = document.getElementById("live-total");
+      if (hours) {
+        hours.innerHTML = "<div><span>勤務時間</span><strong>" + hoursLabel(computeMinutes(e.start, e.end, e.breakMin)) + "</strong></div>" +
+          (crossesMidnight(e.start, e.end) ? "<div class='midnight'>終了が開始と同じか前の時刻のため、翌日終了として計算しています。</div>" : "");
+      }
+      if (total) {
+        total.innerHTML = "<div><span>報酬</span><strong>" + formatYen(workPay(e)) + "</strong></div>" +
+          "<div><span>合計（交通費・経費込）</span><strong>" + formatYen(entryTotal(e)) + "</strong></div>";
+      }
+    }
+    function rateFieldFilled(name) {
+      const el = document.querySelector('#entry-form [name="' + name + '"]');
+      return el && String(el.value || "").trim() !== "";
+    }
+    function saveEntry() {
+      const e = readForm();
+      if (!e.client) { alert("請求先を入力してください。"); return; }
+      if (e.calcType === "hourly") {
+        if (!rateFieldFilled("hourlyRate")) { alert("時給額を入力してください。"); return; }
+      } else if (!rateFieldFilled("dailyRate")) {
+        alert("日給額を入力してください。");
+        return;
+      }
+      ensureClient(e.client);
+      const saved = {
+        id: e.id || uid(),
+        date: e.date || dayDate,
+        client: e.client,
+        project: e.project || "",
+        memo: e.memo || "",
+        calcType: e.calcType === "hourly" ? "hourly" : "daily",
+        dailyRate: parseMoney(e.dailyRate),
+        hourlyRate: parseMoney(e.hourlyRate),
+        start: e.start || "",
+        end: e.end || "",
+        breakMin: parseMoney(e.breakMin),
+        transport: parseMoney(e.transport),
+        expenses: parseMoney(e.expenses),
+        status: e.status || "unbilled"
+      };
+      const idx = state.entries.findIndex(function (x) { return x.id === saved.id; });
+      if (idx >= 0) state.entries[idx] = saved;
+      else state.entries.push(saved);
+      persist();
+      render();
+      openDay(saved.date);
+    }
+    function deleteEntry(id) {
+      if (!confirm("この仕事の記録を削除しますか？")) return;
+      const e = state.entries.find(function (x) { return x.id === id; });
+      const date = e ? e.date : dayDate;
+      state.entries = state.entries.filter(function (x) { return x.id !== id; });
+      persist();
+      render();
+      openDay(date);
+    }
+
+    function openGoalEditor() {
+      const key = ymKey(state.view);
+      const def = state.defaultGoal || "";
+      const shown = hasMonthOverride(key) ? state.monthlyGoals[key] : def;
+      const html = '<form class="form-grid" id="goal-form">' +
+        '<label class="fld">この月の目標額<input name="monthGoal" inputmode="numeric" placeholder="例：500000" value="' + escapeHtml(shown === 0 || shown === "" ? "" : shown) + '"></label>' +
+        '<label class="chk"><input type="checkbox" name="asDefault">今後の標準目標にもする（まだ個別に設定していない月に引き継がれます）</label>' +
+        (hasMonthOverride(key)
+          ? '<p class="note">いまは「この月だけ」の目標です。標準の目標は ' + formatYen(state.defaultGoal || 0) + " です。</p>"
+          : '<p class="note">空欄の月は、標準の目標額（現在 ' + formatYen(state.defaultGoal || 0) + "）を使います。</p>") +
+        '<div class="actions">' +
+        (hasMonthOverride(key)
+          ? '<button type="button" class="btn" data-action="clear-month-goal">標準に戻す</button>'
+          : '<button type="button" class="btn ghost" data-action="close-sheet">キャンセル</button>') +
+        '<button type="submit" class="btn primary">保存</button></div></form>';
+      openSheet(monthLabel(state.view) + "の目標", html);
+    }
+    function saveGoal(ev) {
+      ev.preventDefault();
+      const form = document.getElementById("goal-form");
+      const val = String(new FormData(form).get("monthGoal") || "").trim();
+      const asDefault = form.querySelector('[name="asDefault"]').checked;
+      const key = ymKey(state.view);
+      if (val === "") {
+        delete state.monthlyGoals[key];
+        if (asDefault) state.defaultGoal = 0;
+      } else {
+        const n = parseMoney(val);
+        state.monthlyGoals[key] = n;
+        if (asDefault) state.defaultGoal = n;
+      }
+      persist();
+      closeSheet();
+      render();
+    }
+
+    function openMenu() {
+      const html = '<div class="menu-list">' +
+        '<div><div class="fld" style="margin-bottom:6px">週の始まり</div><div class="seg">' +
+        '<button type="button" data-action="set-weekstart" data-v="0" class="' + (state.weekStartsOn === 0 ? "on" : "") + '">日曜始まり</button>' +
+        '<button type="button" data-action="set-weekstart" data-v="1" class="' + (state.weekStartsOn === 1 ? "on" : "") + '">月曜始まり</button></div></div>' +
+        '<form id="default-goal-form" class="form-grid" style="gap:8px"><label class="fld">標準の目標稼ぎ額（先の月に引き継ぐ）' +
+        '<input name="defaultGoal" inputmode="numeric" placeholder="例：500000" value="' + escapeHtml(state.defaultGoal || "") + '"></label>' +
+        '<button type="submit" class="btn">標準目標を保存</button></form>' +
+        '<button type="button" class="btn" data-action="open-clients">請求先の色と支払条件</button>' +
+        '<button type="button" class="btn" data-action="export-csv">今月のCSVを書き出す</button>' +
+        '<button type="button" class="btn" data-action="export-json">バックアップ（JSON）を書き出す</button>' +
+        '<button type="button" class="btn" data-action="import-json">バックアップを読み込む</button>' +
+        '</div><p class="hint">データはこの端末のブラウザ（localStorage）に保存されます。機種変更やブラウザを変えると見えなくなるので、定期的にJSONバックアップを取ってください。印刷は請求明細からできます。</p>';
+      openSheet("設定とデータ", html);
+    }
+
+    function isClosePreset(closeDay, v) {
+      if (v === "end") return closeDay === "end";
+      if (v === "custom") return closeDay !== "end" && closeDay !== 15 && closeDay !== 20 && closeDay !== 25 && closeDay !== "15" && closeDay !== "20" && closeDay !== "25";
+      return String(closeDay) === String(v);
+    }
+    function isPayPreset(terms, months, day) {
+      return Number(terms.payMonthsLater) === Number(months) && String(terms.payDay) === String(day);
+    }
+    function isCustomPay(terms) {
+      const presets = [
+        [1, 5], [1, 10], [1, 15], [1, 25], [1, "end"], [2, 5], [2, "end"]
+      ];
+      return !presets.some(function (p) { return isPayPreset(terms, p[0], p[1]); });
+    }
+    function openClients() {
+      const names = clientNames();
+      let html = "";
+      if (!names.length) html = "<p class='empty'>まだ請求先がありません。仕事を追加するとここに表示されます。</p>";
+      else {
+        html = names.map(function (n) {
+          const count = state.entries.filter(function (e) { return e.client === n; }).length;
+          const open = colorTarget === n;
+          return '<div class="client-row"><button type="button" class="dot" style="background:' + clientColor(n) + '" data-action="edit-client" data-name="' + escapeHtml(n) + '" aria-label="色と支払条件を変更"></button>' +
+            '<button type="button" class="name" style="text-align:left;background:none;border:0;padding:0" data-action="edit-client" data-name="' + escapeHtml(n) + '">' + escapeHtml(n) +
+            '<div class="terms-summary">' + escapeHtml(termsLabel(n)) + "　" + count + "件" + (count === 0 ? "・未使用" : "") + "</div></button>" +
+            (count === 0 ? '<button type="button" class="btn" style="min-height:40px" data-action="forget-client" data-name="' + escapeHtml(n) + '">削除</button>' : "") +
+            "</div>" + (open ? clientEditorHtml(n) : "");
+        }).join("");
+        if (!colorTarget) {
+          html += "<p class='hint'>請求先をタップすると、色・締め日・支払日を設定できます。新しい請求先には自動で色が付き、初期は末締め・翌月末払いです。</p>";
+        }
+      }
+      openSheet("請求先の設定", html);
+    }
+    function clientEditorHtml(name) {
+      const terms = clientTerms(name);
+      const closeBtns = [
+        ["end", "末締め"], ["15", "15日締め"], ["20", "20日締め"], ["25", "25日締め"], ["custom", "日を指定"]
+      ].map(function (p) {
+        return '<button type="button" class="' + (isClosePreset(terms.closeDay, p[0]) ? "on" : "") + '" data-action="set-close" data-name="' + escapeHtml(name) + '" data-v="' + p[0] + '">' + p[1] + "</button>";
+      }).join("");
+      const payBtns = [
+        [1, 5, "翌月5日払い"], [1, 10, "翌月10日"], [1, 15, "翌月15日"], [1, 25, "翌月25日"],
+        [1, "end", "翌月末払い"], [2, 5, "翌々月5日"], [2, "end", "翌々月末払い"]
+      ].map(function (p) {
+        return '<button type="button" class="' + (isPayPreset(terms, p[0], p[1]) ? "on" : "") + '" data-action="set-pay" data-name="' + escapeHtml(name) + '" data-months="' + p[0] + '" data-day="' + p[1] + '">' + p[2] + "</button>";
+      }).join("") +
+        '<button type="button" class="' + (isCustomPay(terms) ? "on" : "") + '" data-action="set-pay" data-name="' + escapeHtml(name) + '" data-months="custom" data-day="custom">指定する</button>';
+      const customClose = (isClosePreset(terms.closeDay, "custom") || (terms.closeDay !== "end" && terms.closeDay !== 15 && terms.closeDay !== 20 && terms.closeDay !== 25))
+        ? '<label class="fld">締め日（日）<input name="customClose" inputmode="numeric" value="' + escapeHtml(terms.closeDay === "end" ? "" : terms.closeDay) + '" placeholder="例：10"></label>'
+        : "";
+      const customPay = isCustomPay(terms)
+        ? '<div class="row2"><label class="fld">締めの何ヶ月後<input name="customPayMonths" inputmode="numeric" value="' + escapeHtml(terms.payMonthsLater) + '"></label>' +
+          '<label class="fld">支払日（空欄で末日）<input name="customPayDay" inputmode="numeric" value="' + escapeHtml(terms.payDay === "end" ? "" : terms.payDay) + '" placeholder="末なら空欄"></label></div>'
+        : "";
+      return '<form id="client-terms-form" class="form-grid" style="margin:4px 0 16px;padding:12px;background:var(--bg);border-radius:12px" data-name="' + escapeHtml(name) + '">' +
+        "<p style='margin:0;font-weight:700'>「" + escapeHtml(name) + "」の色</p><div class='palette'>" +
+        PALETTE.map(function (c) {
+          const on = clientColor(name).toLowerCase() === c.toLowerCase() ? " on" : "";
+          return '<button type="button" class="' + on + '" style="background:' + c + '" data-action="apply-color" data-color="' + c + '" aria-label="' + c + '"></button>';
+        }).join("") + "</div>" +
+        '<div><div class="fld" style="margin-bottom:6px">締め日</div><div class="preset-wrap">' + closeBtns + "</div>" + customClose + "</div>" +
+        '<div><div class="fld" style="margin-bottom:6px">支払日</div><div class="preset-wrap">' + payBtns + "</div>" + customPay + "</div>" +
+        '<p class="note" style="margin:0">いまの条件：' + escapeHtml(termsLabel(name)) + "。勤務日が締め日の翌日以降なら、次の締め期間として計算します。</p></form>";
+    }
+    function saveCustomTerms() {
+      const form = document.getElementById("client-terms-form");
+      if (!form || !colorTarget) return;
+      ensureClient(colorTarget);
+      const c = state.clients[colorTarget];
+      const closeIn = form.querySelector('[name="customClose"]');
+      const monthsIn = form.querySelector('[name="customPayMonths"]');
+      const dayIn = form.querySelector('[name="customPayDay"]');
+      if (closeIn) {
+        const v = String(closeIn.value || "").trim();
+        c.closeDay = v === "" ? "end" : (Number(v) || c.closeDay);
+      }
+      if (monthsIn) {
+        const v = Number(String(monthsIn.value || "").trim());
+        if (isFinite(v) && v >= 0) c.payMonthsLater = v;
+      }
+      if (dayIn) {
+        const v = String(dayIn.value || "").trim();
+        c.payDay = v === "" ? "end" : (Number(v) || "end");
+      }
+      persist();
+      render();
+    }
+
+    function openInvoices() {
+      const sum = summarize(monthEntries(state.view));
+      if (!sum.clients.length) {
+        openSheet("請求明細", "<p class='empty'>この月の記録はまだありません。</p>");
+        return;
+      }
+      if (!invoiceClient || !sum.clients.some(function (c) { return c.name === invoiceClient; })) {
+        invoiceClient = sum.clients[0].name;
+      }
+      const tabs = '<div class="seg no-print" style="grid-template-columns:repeat(auto-fit,minmax(72px,1fr));margin-bottom:12px">' +
+        sum.clients.map(function (c) {
+          return '<button type="button" class="' + (c.name === invoiceClient ? "on" : "") + '" data-action="invoice-client" data-name="' + escapeHtml(c.name) + '">' +
+            '<i class="swatch" style="background:' + clientColor(c.name) + ';display:inline-block;vertical-align:middle;margin-right:4px"></i>' + escapeHtml(c.name) + "</button>";
+        }).join("") + "</div>";
+      const c = sum.clients.find(function (x) { return x.name === invoiceClient; });
+      const tax = withholdingOf(c.pay);
+      const net = c.pay - tax + c.transport + c.expenses;
+      const rows = c.entries.map(function (e) {
+        const min = computeMinutes(e.start, e.end, e.breakMin);
+        return "<tr><td class='left'>" + escapeHtml(e.date.slice(8) + "日") + (e.memo ? "<div class='note' style='margin:0'>" + escapeHtml(e.memo) + "</div>" : "") + "</td>" +
+          "<td class='left'>" + escapeHtml(e.project || "—") + "</td>" +
+          "<td>" + (e.start && e.end ? e.start + "–" + e.end : "—") + "</td><td>" + hoursLabel(min) + "</td>" +
+          "<td>" + formatYen(workPay(e)) + "</td><td>" + formatYen(e.transport) + "</td><td>" + formatYen(e.expenses) + "</td>" +
+          "<td>" + formatYen(entryTotal(e)) + "</td></tr>";
+      }).join("");
+      const projectBlock = (c.projects && c.projects.length) ? ("<h3 style='margin:14px 0 6px;font-size:0.85rem'>案件ごとの合計</h3><div class='table-wrap'><table><thead><tr><th class='left'>案件名</th><th>日数</th><th>勤務</th><th>報酬</th><th>交通費</th><th>経費</th><th>合計</th></tr></thead><tbody>" +
+        c.projects.map(function (pr) {
+          return "<tr><td class='left'>" + escapeHtml(pr.name) + "</td><td>" + pr.dayCount + "</td><td>" + hoursLabel(pr.minutes) + "</td><td>" + formatYen(pr.pay) + "</td><td>" + formatYen(pr.transport) + "</td><td>" + formatYen(pr.expenses) + "</td><td>" + formatYen(pr.total) + "</td></tr>";
+        }).join("") + "</tbody></table></div>") : "";
+      const withholdBlock = state.showWithholding
+        ? "<div class='withhold-lines'><div><span>源泉徴収額（10.21%）</span><span>" + formatYen(tax) + "</span></div><div><span>差引支払額</span><strong>" + formatYen(net) + "</strong></div></div>"
+        : "";
+      const inv = '<div id="invoice-view"><h2>請求明細</h2>' +
+        "<div class='inv-meta'>請求者：西原やすあき<br>対象：" + monthLabel(state.view) + "<br>請求先：<span class='client-cell'><i class='swatch' style='background:" + clientColor(c.name) + "'></i>" + escapeHtml(c.name) + "</span></div>" +
+        "<div class='table-wrap'><table><thead><tr><th class='left'>日付</th><th class='left'>案件名</th><th>時間</th><th>勤務</th><th>報酬</th><th>交通費</th><th>経費</th><th>合計</th></tr></thead><tbody>" +
+        rows + "</tbody><tfoot><tr><td class='left'>合計（" + c.dayCount + "日）</td><td></td><td></td><td>" + hoursLabel(c.minutes) + "</td><td>" + formatYen(c.pay) + "</td><td>" + formatYen(c.transport) + "</td><td>" + formatYen(c.expenses) + "</td><td>" + formatYen(c.total) + "</td></tr></tfoot></table></div>" +
+        projectBlock + withholdBlock + "</div>";
+      const html = tabs + inv + '<div class="actions no-print"><button type="button" class="btn primary" data-action="print-invoice">印刷する</button></div>' +
+        "<p class='hint no-print'>印刷ダイアログからPDF保存もできます。正式な請求書として使う場合は、振込先などを手元で追記してください。</p>";
+      openSheet("請求明細", html);
+    }
+
+    function openPayments() {
+      const view = state.view;
+      const start = ymd(new Date(view.getFullYear(), view.getMonth(), 1));
+      const end = ymd(new Date(view.getFullYear(), view.getMonth() + 1, 0));
+      const inMonth = paymentGroups(function (g) { return g.payYmd >= start && g.payYmd <= end; });
+      const laterFromThisMonth = paymentGroups(function (g, e) {
+        return e.date >= start && e.date <= end && (g.payYmd < start || g.payYmd > end);
+      });
+      function amountOf(g) { return state.showWithholding ? g.net : g.total; }
+      function renderGroup(g) {
+        const status = g.allPaid ? "paid" : (g.entries.every(function (e) { return e.status === "billed"; }) ? "billed" : "unbilled");
+        const statusLabel = g.allPaid ? "入金済み" : (g.somePaid ? "一部入金" : (status === "billed" ? "請求済み（入金待ち）" : "未請求"));
+        const items = g.entries.slice().sort(function (a, b) { return a.date < b.date ? -1 : 1; }).map(function (e) {
+          return "<div class='pay-item'><span>" + e.date.slice(5).replace("-", "/") + (e.project ? " " + escapeHtml(e.project) : "") +
+            "</span><span>" + formatYen(state.showWithholding ? entryNet(e) : entryTotal(e)) + "　<span class='badge " + e.status + "'>" + (STATUS[e.status] || "") + "</span></span></div>";
+        }).join("");
+        const action = g.allPaid
+          ? '<button type="button" class="btn" style="min-height:40px;width:100%;margin-top:8px" data-action="mark-unpaid-group" data-key="' + escapeHtml(g.key) + '">未入金に戻す</button>'
+          : '<button type="button" class="btn primary" style="min-height:40px;width:100%;margin-top:8px" data-action="mark-paid-group" data-key="' + escapeHtml(g.key) + '">この入金を入金済みにする</button>';
+        return "<div style='margin:8px 0 14px'><div style='display:flex;align-items:center;gap:8px;font-weight:800'><i class='swatch' style='background:" + clientColor(g.client) + "'></i>" + escapeHtml(g.client) +
+          "<span class='badge " + (g.allPaid ? "paid" : status) + "'>" + statusLabel + "</span>" +
+          "<span style='margin-left:auto'>" + formatYen(amountOf(g)) + "</span></div>" +
+          "<div class='note' style='margin:2px 0 6px'>" + escapeHtml(g.period) + "　" + escapeHtml(termsLabel(g.client)) + "</div>" +
+          items + '<div class="no-print">' + action + "</div></div>";
+      }
+      function byDate(list) {
+        const dates = [];
+        const map = {};
+        list.forEach(function (g) {
+          if (!map[g.payYmd]) { map[g.payYmd] = []; dates.push(g.payYmd); }
+          map[g.payYmd].push(g);
+        });
+        if (!dates.length) return "<p class='empty' style='padding:8px 0'>該当なし</p>";
+        return dates.map(function (d) {
+          const gs = map[d];
+          const sum = gs.reduce(function (s, g) { return s + amountOf(g); }, 0);
+          return "<div class='pay-date-head'>" + longDate(d) + "　" + formatYen(sum) + "</div>" + gs.map(renderGroup).join("");
+        }).join("");
+      }
+      const unpaid = inMonth.filter(function (g) { return !g.allPaid; });
+      const paid = inMonth.filter(function (g) { return g.allPaid; });
+      const unpaidTotal = unpaid.reduce(function (s, g) { return s + amountOf(g); }, 0);
+      const paidTotal = paid.reduce(function (s, g) { return s + amountOf(g); }, 0);
+      const html = "<div class='stats' style='margin-bottom:12px;grid-template-columns:1fr 1fr'><div class='stat'><div class='lbl'>今月の入金予定（未入金）</div><div class='val'>" + formatYen(unpaidTotal) + "</div></div>" +
+        "<div class='stat'><div class='lbl'>今月入金済み</div><div class='val'>" + formatYen(paidTotal) + "</div></div></div>" +
+        (state.showWithholding ? "<p class='note'>金額は源泉徴収後の差引支払額です。</p>" : "") +
+        "<h3 style='font-size:0.85rem;color:var(--muted);letter-spacing:0.06em'>入金日順</h3>" +
+        byDate(inMonth) +
+        (laterFromThisMonth.length
+          ? "<h3 style='margin-top:20px;font-size:0.85rem;color:var(--muted);letter-spacing:0.06em'>この月の仕事で、入金が今月以外になる分</h3>" + laterFromThisMonth.map(function (g) {
+              return "<div class='pay-item'><span><i class='swatch' style='background:" + clientColor(g.client) + ";display:inline-block;vertical-align:middle;margin-right:6px'></i>" + escapeHtml(g.client) +
+                "　" + escapeHtml(g.period) + "<br>入金予定 " + g.payYmd.replace(/-/g, "/") + "</span><span>" + formatYen(amountOf(g)) + "　<span class='badge " + (g.allPaid ? "paid" : "unbilled") + "'>" + (g.allPaid ? "入金済み" : "未入金") + "</span></span></div>";
+            }).join("")
+          : "") +
+        "<p class='hint'>入金予定日は、請求先ごとの締め日と支払日で計算しています。カレンダーの¥は、その日が入金予定日であることを示します。</p>";
+      openSheet(monthLabel(state.view) + "の入金予定", html);
+    }
+
+    function csvEscape(v) {
+      const s = String(v == null ? "" : v);
+      if (/[",\n\r]/.test(s)) return '"' + s.replace(/"/g, '""') + '"';
+      return s;
+    }
+    function exportCsv() {
+      const list = monthEntries(state.view);
+      const headers = ["日付", "請求先", "案件名", "メモ", "計算方法", "日給", "時給", "開始", "終了", "休憩(分)", "勤務時間(分)", "勤務時間", "報酬", "交通費", "経費", "合計", "状態", "入金予定日"];
+      const rows = [headers.map(csvEscape).join(",")];
+      list.forEach(function (e) {
+        const min = computeMinutes(e.start, e.end, e.breakMin);
+        rows.push([
+          e.date, e.client, e.project || "", e.memo || "", e.calcType === "hourly" ? "時給" : "日給",
+          e.dailyRate, e.hourlyRate, e.start, e.end, e.breakMin, min, hoursLabel(min),
+          workPay(e), e.transport, e.expenses, entryTotal(e), STATUS[e.status] || e.status,
+          entryPaymentYmd(e)
+        ].map(csvEscape).join(","));
+      });
+      downloadBlob(new Blob(["\uFEFF" + rows.join("\r\n")], { type: "text/csv;charset=utf-8" }),
+        "kyuyo-" + ymKey(state.view) + ".csv");
+    }
+    function exportJson() {
+      downloadBlob(new Blob([JSON.stringify(exportPayload(), null, 2)], { type: "application/json" }),
+        "kyuyo-backup-" + ymd(todayDate()) + ".json");
+    }
+    function downloadBlob(blob, name) {
+      const a = document.createElement("a");
+      const url = URL.createObjectURL(blob);
+      a.href = url;
+      a.download = name;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(function () { URL.revokeObjectURL(url); }, 500);
+    }
+    function importJsonFile(file) {
+      const reader = new FileReader();
+      reader.onload = function () {
+        try {
+          const data = JSON.parse(reader.result);
+          if (!data || typeof data !== "object" || (data.entries != null && !Array.isArray(data.entries))) {
+            throw new Error("形式が違います");
+          }
+          if (!confirm("現在のデータを、読み込んだバックアップで置き換えますか？この操作は取り消せません。")) return;
+          applyData(data);
+          persist();
+          render();
+          closeSheet();
+          alert("バックアップを読み込みました。");
+        } catch (err) {
+          alert("読み込めませんでした。JSONバックアップのファイルか確認してください。");
+        }
+      };
+      reader.readAsText(file, "UTF-8");
+    }
+
+    function seedDemo() {
+      state.weekStartsOn = 0;
+      state.defaultGoal = 500000;
+      state.monthlyGoals = {};
+      state.showWithholding = false;
+      state.clients = {
+        "関西テレビ": { color: "#8C6A55", closeDay: "end", payMonthsLater: 1, payDay: 15 },
+        "NHK大阪": { color: "#5F7468", closeDay: 15, payMonthsLater: 1, payDay: "end" },
+        "朝日放送": { color: "#6E6578", closeDay: "end", payMonthsLater: 1, payDay: 5 },
+        "松竹": { color: "#A0895C", closeDay: 20, payMonthsLater: 1, payDay: 25 },
+        "東映京都": { color: "#5C6D7C", closeDay: 25, payMonthsLater: 1, payDay: 10 }
+      };
+      state.entries = [
+        { id: "o1", date: "2026-10-22", client: "関西テレビ", project: "情報番組", memo: "", calcType: "daily", dailyRate: 40000, hourlyRate: 0, start: "09:00", end: "18:00", breakMin: 60, transport: 2000, expenses: 0, status: "paid" },
+        { id: "o2", date: "2026-10-08", client: "NHK大阪", project: "連続ドラマ", memo: "", calcType: "daily", dailyRate: 45000, hourlyRate: 0, start: "08:00", end: "17:00", breakMin: 60, transport: 1500, expenses: 0, status: "paid" },
+        { id: "o3", date: "2026-10-30", client: "朝日放送", project: "ラジオ出演", memo: "", calcType: "hourly", dailyRate: 0, hourlyRate: 4000, start: "13:00", end: "17:00", breakMin: 0, transport: 800, expenses: 0, status: "paid" },
+        { id: "o4", date: "2026-10-10", client: "松竹", project: "舞台公演", memo: "", calcType: "daily", dailyRate: 35000, hourlyRate: 0, start: "12:00", end: "21:00", breakMin: 60, transport: 0, expenses: 0, status: "billed" },
+        { id: "o5", date: "2026-10-20", client: "東映京都", project: "映画ロケ", memo: "", calcType: "daily", dailyRate: 50000, hourlyRate: 0, start: "06:00", end: "19:00", breakMin: 60, transport: 5000, expenses: 0, status: "billed" },
+        { id: "d1", date: "2026-11-03", client: "関西テレビ", project: "情報番組", memo: "", calcType: "daily", dailyRate: 40000, hourlyRate: 0, start: "09:00", end: "18:00", breakMin: 60, transport: 2000, expenses: 0, status: "paid" },
+        { id: "d2", date: "2026-11-05", client: "NHK大阪", project: "連続ドラマ", memo: "", calcType: "daily", dailyRate: 45000, hourlyRate: 0, start: "08:00", end: "17:00", breakMin: 60, transport: 1500, expenses: 0, status: "paid" },
+        { id: "d3", date: "2026-11-07", client: "朝日放送", project: "ラジオ出演", memo: "", calcType: "hourly", dailyRate: 0, hourlyRate: 4000, start: "13:00", end: "17:00", breakMin: 0, transport: 800, expenses: 0, status: "paid" },
+        { id: "d4", date: "2026-11-08", client: "松竹", project: "舞台公演", memo: "", calcType: "daily", dailyRate: 35000, hourlyRate: 0, start: "12:00", end: "21:00", breakMin: 60, transport: 0, expenses: 0, status: "billed" },
+        { id: "d5", date: "2026-11-12", client: "関西テレビ", project: "情報番組", memo: "", calcType: "daily", dailyRate: 40000, hourlyRate: 0, start: "09:00", end: "18:00", breakMin: 60, transport: 2000, expenses: 0, status: "billed" },
+        { id: "d6", date: "2026-11-14", client: "NHK大阪", project: "連続ドラマ", memo: "", calcType: "daily", dailyRate: 45000, hourlyRate: 0, start: "09:00", end: "18:00", breakMin: 60, transport: 1500, expenses: 500, status: "billed" },
+        { id: "d7", date: "2026-11-15", client: "東映京都", project: "映画ロケ", memo: "", calcType: "daily", dailyRate: 50000, hourlyRate: 0, start: "06:00", end: "19:00", breakMin: 60, transport: 5000, expenses: 0, status: "unbilled" },
+        { id: "d8", date: "2026-11-18", client: "関西テレビ", project: "情報番組", memo: "", calcType: "daily", dailyRate: 40000, hourlyRate: 0, start: "09:00", end: "18:00", breakMin: 60, transport: 2000, expenses: 0, status: "unbilled" },
+        { id: "d9", date: "2026-11-19", client: "松竹", project: "稽古", memo: "", calcType: "daily", dailyRate: 20000, hourlyRate: 0, start: "13:00", end: "18:00", breakMin: 0, transport: 0, expenses: 0, status: "unbilled" }
+      ];
+      state.view = new Date(2026, 10, 1);
+    }
+
+    document.addEventListener("click", function (ev) {
+      const t = ev.target.closest("[data-action]");
+      if (!t) {
+        if (ev.target === document.getElementById("backdrop")) closeSheet();
+        return;
+      }
+      const action = t.dataset.action;
+      if (action === "prev-month") {
+        state.view = new Date(state.view.getFullYear(), state.view.getMonth() - 1, 1);
+        render();
+      } else if (action === "next-month") {
+        state.view = new Date(state.view.getFullYear(), state.view.getMonth() + 1, 1);
+        render();
+      } else if (action === "go-today") {
+        const n = todayDate();
+        state.view = new Date(n.getFullYear(), n.getMonth(), 1);
+        render();
+      } else if (action === "open-menu") openMenu();
+      else if (action === "close-sheet") closeSheet();
+      else if (action === "open-day") openDay(t.dataset.date);
+      else if (action === "new-entry") openEntryForm(blankEntry(dayDate));
+      else if (action === "edit-entry") {
+        const e = state.entries.find(function (x) { return x.id === t.dataset.id; });
+        if (e) openEntryForm(e);
+      } else if (action === "back-day") openDay(dayDate);
+      else if (action === "set-calc") {
+        formDraft = readForm();
+        formDraft.calcType = t.dataset.v;
+        const daily = document.getElementById("rate-daily");
+        const hourly = document.getElementById("rate-hourly");
+        if (daily) daily.hidden = formDraft.calcType === "hourly";
+        if (hourly) hourly.hidden = formDraft.calcType !== "hourly";
+        document.querySelectorAll("#calc-seg button").forEach(function (b) {
+          b.classList.toggle("on", b.dataset.v === formDraft.calcType);
+        });
+        refreshLive();
+      } else if (action === "set-status") {
+        formDraft = readForm();
+        formDraft.status = t.dataset.v;
+        document.querySelectorAll("#status-seg button").forEach(function (b) {
+          b.classList.toggle("on", b.dataset.v === formDraft.status);
+        });
+      } else if (action === "delete-entry") deleteEntry(editingId || (formDraft && formDraft.id));
+      else if (action === "edit-goal") openGoalEditor();
+      else if (action === "clear-month-goal") {
+        delete state.monthlyGoals[ymKey(state.view)];
+        persist();
+        closeSheet();
+        render();
+      } else if (action === "set-weekstart") {
+        state.weekStartsOn = Number(t.dataset.v) === 1 ? 1 : 0;
+        persist();
+        render();
+        openMenu();
+      } else if (action === "open-clients") { colorTarget = null; openClients(); }
+      else if (action === "pick-color" || action === "edit-client") { colorTarget = t.dataset.name; openClients(); }
+      else if (action === "apply-color") {
+        if (colorTarget) {
+          ensureClient(colorTarget);
+          state.clients[colorTarget].color = t.dataset.color;
+          persist();
+          render();
+          openClients();
+        }
+      } else if (action === "set-close") {
+        colorTarget = t.dataset.name;
+        ensureClient(colorTarget);
+        if (t.dataset.v === "custom") {
+          const cur = state.clients[colorTarget].closeDay;
+          if (cur === "end" || cur === 15 || cur === 20 || cur === 25 || cur === "15" || cur === "20" || cur === "25") {
+            state.clients[colorTarget].closeDay = 10;
+          }
+        } else if (t.dataset.v === "end") {
+          state.clients[colorTarget].closeDay = "end";
+        } else {
+          state.clients[colorTarget].closeDay = Number(t.dataset.v);
+        }
+        persist();
+        render();
+        openClients();
+      } else if (action === "set-pay") {
+        colorTarget = t.dataset.name;
+        ensureClient(colorTarget);
+        if (t.dataset.months === "custom") {
+          if (!isCustomPay(clientTerms(colorTarget))) {
+            state.clients[colorTarget].payMonthsLater = 1;
+            state.clients[colorTarget].payDay = 8;
+          }
+        } else {
+          state.clients[colorTarget].payMonthsLater = Number(t.dataset.months);
+          state.clients[colorTarget].payDay = t.dataset.day === "end" ? "end" : Number(t.dataset.day);
+        }
+        persist();
+        render();
+        openClients();
+      } else if (action === "mark-paid-group") {
+        setGroupStatus(t.dataset.key, "paid");
+        persist();
+        render();
+        openPayments();
+      } else if (action === "mark-unpaid-group") {
+        setGroupStatus(t.dataset.key, "billed");
+        persist();
+        render();
+        openPayments();
+      } else if (action === "forget-client") {
+        const name = t.dataset.name;
+        if (confirm(name + " を請求先リストから外しますか？")) {
+          delete state.clients[name];
+          persist();
+          if (colorTarget === name) colorTarget = null;
+          openClients();
+          render();
+        }
+      } else if (action === "open-invoices") openInvoices();
+      else if (action === "invoice-client") { invoiceClient = t.dataset.name; openInvoices(); }
+      else if (action === "print-invoice") {
+        document.body.classList.add("printing");
+        window.print();
+      } else if (action === "open-payments") openPayments();
+      else if (action === "export-csv") exportCsv();
+      else if (action === "export-json") exportJson();
+      else if (action === "import-json") document.getElementById("import-file").click();
+    });
+
+    document.addEventListener("change", function (ev) {
+      if (ev.target && ev.target.id === "withhold-toggle") {
+        state.showWithholding = ev.target.checked;
+        persist();
+        render();
+        return;
+      }
+      if (ev.target && ev.target.id === "import-file" && ev.target.files[0]) {
+        importJsonFile(ev.target.files[0]);
+        ev.target.value = "";
+      }
+      if (ev.target && ev.target.closest("#entry-form")) refreshLive();
+      if (ev.target && ev.target.closest("#client-terms-form")) {
+        saveCustomTerms();
+      }
+    });
+    document.addEventListener("input", function (ev) {
+      if (ev.target && ev.target.closest("#entry-form")) refreshLive();
+      if (ev.target && ev.target.closest("#client-terms-form")) {
+        saveCustomTerms();
+      }
+      if (ev.target && ev.target.name === "client" && ev.target.closest("#entry-form")) {
+        refreshProjectList();
+      }
+      if (ev.target && ev.target.name === "client" && ev.target.closest("#entry-form") && !editingId) {
+        const last = lastEntryForClient(ev.target.value.trim());
+        if (last) {
+          formDraft = readForm();
+          if (!rateFieldFilled("dailyRate") && !rateFieldFilled("hourlyRate")) {
+            formDraft.calcType = last.calcType;
+            formDraft.dailyRate = last.dailyRate;
+            formDraft.hourlyRate = last.hourlyRate;
+            const dailyIn = document.querySelector('#entry-form [name="dailyRate"]');
+            const hourlyIn = document.querySelector('#entry-form [name="hourlyRate"]');
+            if (dailyIn) dailyIn.value = last.dailyRate || "";
+            if (hourlyIn) hourlyIn.value = last.hourlyRate || "";
+            const daily = document.getElementById("rate-daily");
+            const hourly = document.getElementById("rate-hourly");
+            if (daily) daily.hidden = formDraft.calcType === "hourly";
+            if (hourly) hourly.hidden = formDraft.calcType !== "hourly";
+            document.querySelectorAll("#calc-seg button").forEach(function (b) {
+              b.classList.toggle("on", b.dataset.v === formDraft.calcType);
+            });
+            refreshLive();
+          }
+        }
+      }
+    });
+    document.addEventListener("submit", function (ev) {
+      if (ev.target && ev.target.id === "entry-form") {
+        ev.preventDefault();
+        saveEntry();
+      } else if (ev.target && ev.target.id === "goal-form") {
+        saveGoal(ev);
+      } else if (ev.target && ev.target.id === "default-goal-form") {
+        ev.preventDefault();
+        state.defaultGoal = parseMoney(ev.target.defaultGoal.value);
+        persist();
+        render();
+        openMenu();
+      }
+    });
+    document.addEventListener("keydown", function (ev) {
+      if (ev.key === "Escape" && !document.getElementById("backdrop").hidden) closeSheet();
+    });
+    window.addEventListener("afterprint", function () {
+      document.body.classList.remove("printing");
+    });
+
+    window.__kyuyo = {
+      computeMinutes: computeMinutes,
+      hoursLabel: hoursLabel,
+      workPay: workPay,
+      entryTotal: entryTotal,
+      withholdingOf: withholdingOf,
+      formatYen: formatYen,
+      compactYen: compactYen,
+      crossesMidnight: crossesMidnight,
+      remainingDays: remainingDays,
+      getGoal: getGoal,
+      summarize: summarize,
+      ymd: ymd,
+      parseYmd: parseYmd,
+      paymentDateYmd: paymentDateYmd,
+      closingDateForWork: closingDateForWork,
+      clientTerms: clientTerms,
+      entryPaymentYmd: entryPaymentYmd,
+      entryClosingYmd: entryClosingYmd,
+      entryNet: entryNet,
+      periodLabel: periodLabel,
+      paymentGroups: paymentGroups,
+      weekdayColor: weekdayColor,
+      monthCells: monthCells,
+      WEEKDAYS_EN: WEEKDAYS_EN,
+      state: state
+    };
+
+    const params = new URLSearchParams(location.search);
+    load();
+    if (params.get("demo") === "1") {
+      seedDemo();
+      persist();
+    } else {
+      const n = todayDate();
+      state.view = new Date(n.getFullYear(), n.getMonth(), 1);
+    }
+    render();
+  })();
+
+  if ((location.protocol === "http:" || location.protocol === "https:") && "serviceWorker" in navigator) {
+    navigator.serviceWorker.register("./sw.js", { scope: "./" }).catch(function () {});
+  }
+
+  </script>
+</body>
+</html>
